@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 140">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6d28d9" />
+      <stop offset="100%" stop-color="#1e293b" />
+    </linearGradient>
+  </defs>
+  <rect width="220" height="140" rx="24" fill="url(#bg)" />
+  <g fill="#ede9fe">
+    <path d="M56 42h54c11 0 20 9 20 20v10c0 11-9 20-20 20H92l-20 16 5-16H56c-11 0-20-9-20-20V62c0-11 9-20 20-20z">
+      <animateTransform attributeName="transform" type="translate" values="0 0;0 -2;0 0" dur="1.4s" repeatCount="indefinite" />
+    </path>
+    <path d="M132 54h34c10 0 18 8 18 18v8c0 10-8 18-18 18h-8l-14 12 4-12h-16c-10 0-18-8-18-18v-8c0-10 8-18 18-18z" opacity="0.88">
+      <animateTransform attributeName="transform" type="translate" values="0 0;0 2;0 0" dur="1.4s" repeatCount="indefinite" />
+    </path>
+    <circle cx="84" cy="68" r="4" fill="#6d28d9" />
+    <circle cx="100" cy="68" r="4" fill="#6d28d9" />
+    <circle cx="151" cy="76" r="4" fill="#5b21b6" />
+    <circle cx="165" cy="76" r="4" fill="#5b21b6" />
+  </g>
+  <text x="22" y="26" fill="#ede9fe" font-size="11" font-family="Segoe UI, Arial, sans-serif" letter-spacing="2">PHRASE READY</text>
+  <text x="22" y="118" fill="#f8fafc" font-size="20" font-weight="700" font-family="Segoe UI, Arial, sans-serif">HOW ARE YOU</text>
+</svg>

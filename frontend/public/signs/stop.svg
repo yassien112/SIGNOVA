@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 140">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#991b1b" />
+      <stop offset="100%" stop-color="#450a0a" />
+    </linearGradient>
+  </defs>
+  <rect width="220" height="140" rx="24" fill="url(#bg)" />
+  <g>
+    <path d="M110 34l34 14 14 34-14 34-34 14-34-14-14-34 14-34z" fill="#fecaca">
+      <animateTransform attributeName="transform" type="scale" additive="sum" values="1 1;1.06 1.06;1 1" dur="1.4s" repeatCount="indefinite" />
+    </path>
+    <text x="110" y="88" text-anchor="middle" fill="#991b1b" font-size="22" font-weight="700" font-family="Segoe UI, Arial, sans-serif">STOP</text>
+  </g>
+</svg>

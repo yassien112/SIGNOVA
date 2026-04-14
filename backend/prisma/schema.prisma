@@ -1,0 +1,52 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id           String         @id @default(uuid())
+  name         String
+  email        String         @unique
+  password     String
+  role         String         @default("User")
+  isOnline     Boolean        @default(false)
+  avatar       String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  messages     Message[]
+  chats        Chat[]         @relation("ChatParticipants")
+  notifications Notification[]
+}
+
+model Chat {
+  id           String    @id @default(uuid())
+  participants User[]    @relation("ChatParticipants")
+  messages     Message[]
+  createdAt    DateTime  @default(now())
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  text      String
+  senderId  String
+  sender    User     @relation(fields: [senderId], references: [id])
+  chatId    String
+  chat      Chat     @relation(fields: [chatId], references: [id])
+  status    String   @default("sent")
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  type        String
+  message     String
+  readStatus  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
