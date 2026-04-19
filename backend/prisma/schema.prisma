@@ -67,6 +67,55 @@ model MessageReaction {
   @@index([userId])
 }
 
+model SignPack {
+  id          String   @id @default(uuid())
+  name        String
+  nameAr      String?
+  slug        String   @unique
+  coverUrl    String?
+  category    String
+  lang        String   @default("ar")
+  description String?
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  signs       Sign[]
+
+  @@index([lang, category])
+  @@index([isActive, sortOrder])
+}
+
+model Sign {
+  id            String   @id @default(uuid())
+  word          String
+  normalizedWord String
+  label         String
+  imageUrl      String
+  thumbUrl      String?
+  category      String
+  lang          String   @default("ar")
+  tags          String[]
+  aliases       String[]
+  source        String   @default("manual")
+  sampleCount   Int      @default(0)
+  isSticker     Boolean  @default(false)
+  isActive      Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  packId        String?
+  pack          SignPack? @relation(fields: [packId], references: [id], onDelete: SetNull)
+
+  @@unique([lang, normalizedWord])
+  @@index([lang, category])
+  @@index([packId, sortOrder])
+  @@index([isSticker, isActive])
+}
+
 model Notification {
   id         String   @id @default(uuid())
   userId     String

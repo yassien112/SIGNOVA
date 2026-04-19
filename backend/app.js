@@ -20,19 +20,21 @@ export function createApp({
   const app = express();
 
   app.use(cors({ origin: true, credentials: false }));
-  app.use(express.json({ limit: '64kb' }));
+  app.use(express.json({ limit: '1mb' }));
 
   app.get('/api/health', async (req, res) => {
     const speech = speechToTextService.getAvailabilityDetail();
-    const [users, chats, messages] = await Promise.all([
+    const [users, chats, messages, signs, signPacks] = await Promise.all([
       prisma.user.count(),
       prisma.chat.count(),
-      prisma.message.count()
+      prisma.message.count(),
+      prisma.sign?.count?.() ?? 0,
+      prisma.signPack?.count?.() ?? 0,
     ]);
     res.json({
       status: 'ok',
       uptime: process.uptime(),
-      totals: { users, chats, messages },
+      totals: { users, chats, messages, signs, signPacks },
       realtimeSignLanguage: true,
       textToSignAvailable: true,
       speechToTextAvailable: speech.available,
@@ -48,7 +50,7 @@ export function createApp({
   app.use('/api/dashboard',      createDashboardRouter({ prisma, jwtSecret }));
   app.use('/api/profile',        createProfileRouter({ prisma, jwtSecret }));
   app.use('/api/users',          createUserRouter({ prisma, jwtSecret }));
-  app.use('/api/sign-language',  createSignLanguageRouter(signLanguageService));
+  app.use('/api/sign-language',  createSignLanguageRouter({ prisma, jwtSecret, signLanguageService }));
   app.use('/api/text-to-sign',   createTextToSignRouter(textToSignService));
   app.use('/api/speech-to-text', createSpeechToTextRouter(speechToTextService, {
     maxFileSizeBytes: speechToTextConfig.maxFileSizeBytes
