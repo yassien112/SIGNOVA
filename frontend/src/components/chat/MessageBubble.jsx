@@ -10,51 +10,86 @@ function formatTime(iso) {
 
 function StatusIcon({ status, isMine }) {
   if (!isMine) return null;
-  if (status === 'seen')      return <CheckCheck size={12} style={{ color: '#60a5fa' }} />;
-  if (status === 'delivered') return <CheckCheck size={12} style={{ opacity: .6 }} />;
-  if (status === 'sent')      return <Check size={12} style={{ opacity: .5 }} />;
-  return <Clock size={11} style={{ opacity: .4 }} />;
+  if (status === 'seen')      return <CheckCheck size={12} className="text-blue-400" />;
+  if (status === 'delivered') return <CheckCheck size={12} className="opacity-60" />;
+  if (status === 'sent')      return <Check size={12} className="opacity-50" />;
+  return <Clock size={11} className="opacity-40" />;
+}
+
+/* ── Sticker bubble ── */
+function StickerBubble({ msg }) {
+  return (
+    <div className="msg-sticker-wrap">
+      {msg.signs?.length > 0 ? (
+        <div className="msg-sticker-grid">
+          {msg.signs.map((s, i) => (
+            <div key={i} className="msg-sticker-card">
+              <img
+                src={s.thumbUrl || s.imageUrl}
+                alt={s.word || s.label}
+                className="msg-sticker-img"
+                loading="lazy"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
+              <span className="msg-sticker-label">{s.word || s.label}</span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <span className="msg-sticker-text">{msg.text}</span>
+      )}
+    </div>
+  );
+}
+
+/* ── Sign bubble ── */
+function SignBubble({ msg }) {
+  return (
+    <>
+      {msg.text && <span className="msg-sign-source">{msg.text}</span>}
+      {msg.signs?.length > 0 && (
+        <div className="msg-sign-cards">
+          {msg.signs.map((s, i) => (
+            <div key={i} className="msg-sign-card">
+              <img
+                src={s.imageUrl}
+                alt={s.word}
+                className="msg-sign-img"
+                loading="lazy"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
+              <span className="msg-sign-label">{s.word}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {msg.missingWords?.length > 0 && (
+        <span className="msg-missing-words">No sign for: {msg.missingWords.join(', ')}</span>
+      )}
+    </>
+  );
 }
 
 export default function MessageBubble({ msg, isMine, onToggleReaction }) {
-  const isSign = msg.kind === 'sign';
   const [pickerOpen, setPickerOpen] = useState(false);
+  const isSticker = msg.kind === 'sticker';
+  const isSign    = msg.kind === 'sign';
 
   return (
-    <div className={`msg-wrapper ${isMine ? 'mine' : 'theirs'}${isSign ? ' is-sign' : ''}`}>
+    <div className={`msg-wrapper ${isMine ? 'mine' : 'theirs'}${isSticker ? ' is-sticker' : ''}${isSign ? ' is-sign' : ''}`}>
       {!isMine && <span className="msg-sender-name">{msg.senderName || 'User'}</span>}
 
-      <div className={`msg-bubble ${isMine ? 'mine' : 'theirs'}`}>
-        {msg.text && !isSign && <span>{msg.text}</span>}
+      <div className={`msg-bubble ${isMine ? 'mine' : 'theirs'}${isSticker ? ' sticker' : ''}`}>
 
-        {isSign && (
-          <>
-            {msg.text && <span style={{ fontSize: '.8rem', opacity: .75 }}>{msg.text}</span>}
-            {msg.signs?.length > 0 && (
-              <div className="msg-sign-cards">
-                {msg.signs.map((s, i) => (
-                  <div key={i} className="msg-sign-card">
-                    <img src={s.imageUrl} alt={s.word} className="msg-sign-img"
-                      onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                    <span className="msg-sign-label">{s.word}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-            {msg.missingWords?.length > 0 && (
-              <span style={{ fontSize: '.7rem', opacity: .55 }}>
-                No sign for: {msg.missingWords.join(', ')}
-              </span>
-            )}
-          </>
-        )}
+        {isSticker && <StickerBubble msg={msg} />}
+        {isSign    && <SignBubble    msg={msg} />}
+        {!isSticker && !isSign && <span>{msg.text}</span>}
 
         <div className="msg-meta-row">
           <span className="msg-time">
             {formatTime(msg.createdAt)}
             <StatusIcon status={msg.status} isMine={isMine} />
           </span>
-
           <div className="msg-reaction-tools">
             <button
               type="button"
