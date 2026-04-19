@@ -1,53 +1,56 @@
 import React from 'react';
-import { CheckCheck } from 'lucide-react';
-import { useLanguage } from '../../lib/LanguageContext';
+import { Check, CheckCheck, Clock } from 'lucide-react';
 
 function formatTime(iso) {
   if (!iso) return '';
   return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-export default function MessageBubble({ msg, isMine }) {
-  const { t } = useLanguage();
-  const isSign       = msg.kind === 'sign';
-  const signs        = Array.isArray(msg.signs)        ? msg.signs        : [];
-  const segments     = Array.isArray(msg.segments)     ? msg.segments     : [];
-  const matchedWords = Array.isArray(msg.matchedWords) ? msg.matchedWords : [];
-  const missingWords = Array.isArray(msg.missingWords) ? msg.missingWords : [];
+function StatusIcon({ status, isMine }) {
+  if (!isMine) return null;
+  if (status === 'seen')      return <CheckCheck size={12} style={{ color: '#60a5fa' }} />;
+  if (status === 'delivered') return <CheckCheck size={12} style={{ opacity: .6 }} />;
+  if (status === 'sent')      return <Check size={12} style={{ opacity: .5 }} />;
+  return <Clock size={11} style={{ opacity: .4 }} />;
+}
 
+export default function MessageBubble({ msg, isMine }) {
+  const isSign = msg.kind === 'sign';
   return (
     <div className={`msg-wrapper ${isMine ? 'mine' : 'theirs'}${isSign ? ' is-sign' : ''}`}>
-      {!isMine && (
-        <span className="msg-sender-name">
-          {msg.senderName || msg.sender?.name || 'User'}
-        </span>
-      )}
+      {!isMine && <span className="msg-sender-name">{msg.senderName || 'User'}</span>}
+
       <div className={`msg-bubble ${isMine ? 'mine' : 'theirs'}`}>
-        {isSign ? (
+        {/* text line */}
+        {msg.text && !isSign && <span>{msg.text}</span>}
+
+        {/* sign cards */}
+        {isSign && (
           <>
-            <p style={{fontWeight:600,fontSize:'.875rem',opacity:.9}}>{msg.sourceText || msg.text}</p>
-            {signs.length > 0 ? (
+            {msg.text && <span style={{ fontSize: '.8rem', opacity: .75 }}>{msg.text}</span>}
+            {msg.signs?.length > 0 && (
               <div className="msg-sign-cards">
-                {signs.map((src, i) => (
-                  <div key={i} className="msg-sign-card" style={{animationDelay:`${i*80}ms`}}>
-                    <img src={src} alt={matchedWords[i] || `Sign ${i+1}`} className="msg-sign-img" loading="lazy" />
-                    <span className="msg-sign-label">{segments[i]?.label || matchedWords[i] || `Sign ${i+1}`}</span>
+                {msg.signs.map((s, i) => (
+                  <div key={i} className="msg-sign-card">
+                    <img src={s.imageUrl} alt={s.word} className="msg-sign-img"
+                         onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                    <span className="msg-sign-label">{s.word}</span>
                   </div>
                 ))}
               </div>
-            ) : (
-              <p style={{fontSize:'.75rem',opacity:.7}}>No signs found for this phrase.</p>
             )}
-            {missingWords.length > 0 && (
-              <p style={{fontSize:'.75rem',opacity:.6}}>{t('skipped')}: {missingWords.join(', ')}</p>
+            {msg.missingWords?.length > 0 && (
+              <span style={{ fontSize: '.7rem', opacity: .55 }}>
+                No sign for: {msg.missingWords.join(', ')}
+              </span>
             )}
           </>
-        ) : (
-          <span>{msg.text}</span>
         )}
+
+        {/* timestamp + status */}
         <span className="msg-time">
           {formatTime(msg.createdAt)}
-          {isMine && <CheckCheck size={11} />}
+          <StatusIcon status={msg.status} isMine={isMine} />
         </span>
       </div>
     </div>

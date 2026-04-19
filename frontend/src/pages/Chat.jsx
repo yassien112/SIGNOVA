@@ -14,6 +14,7 @@ export default function Chat() {
     chats, activeChat, setActiveChat,
     messages, loadingChats, loadingMsgs,
     messagesEndRef, sendText, sendSign, createPrivateChat,
+    typingLabel, unreadCounts, emitTyping, emitStopTyping,
   } = useChat();
 
   useEffect(() => {
@@ -30,11 +31,15 @@ export default function Chat() {
         chats={chats} activeChat={activeChat}
         onSelect={setActiveChat} onNewChat={createPrivateChat}
         loadingChats={loadingChats} myId={user?.id}
+        unreadCounts={unreadCounts}
       />
       <ChatWindow
         activeChat={activeChat} messages={messages}
         loadingMsgs={loadingMsgs} messagesEndRef={messagesEndRef}
         myId={user?.id} onSendText={sendText} onSendSign={sendSign}
+        typingLabel={typingLabel}
+        onTyping={emitTyping}
+        onStopTyping={emitStopTyping}
       />
     </div>
   );
