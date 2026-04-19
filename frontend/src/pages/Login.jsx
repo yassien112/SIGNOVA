@@ -1,42 +1,22 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { LogIn } from 'lucide-react';
+import { LogIn, Loader2 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
-import { getApiUrl } from '../lib/config';
 import '../styles/Auth.css';
 
 export default function Login() {
   const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
-  const [error,    setError]    = useState('');
-  const [loading,  setLoading]  = useState(false);
-  const navigate = useNavigate();
-  const setLogin = useAuthStore((s) => s.login);
+  const navigate  = useNavigate();
+  const { login, isLoading, error, clearError } = useAuthStore();
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); setLoading(true); setError('');
+    e.preventDefault();
+    clearError();
     try {
-      let response;
-      try {
-        response = await fetch(getApiUrl('/api/auth/login'), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
-        });
-      } catch {
-        throw new Error('Cannot connect to the server. Make sure the backend is running.');
-      }
-      let data = {};
-      const ct = response.headers.get('content-type') || '';
-      if (ct.includes('application/json')) {
-        try { data = await response.json(); } catch { throw new Error('Server returned an invalid response.'); }
-      }
-      if (!response.ok) throw new Error(data.message || `Login failed (HTTP ${response.status})`);
-      if (!data.user || !data.token) throw new Error('Server response is missing user data.');
-      setLogin(data.user, data.token);
+      await login(email, password);
       navigate('/dashboard');
-    } catch (err) { setError(err.message); }
-    finally { setLoading(false); }
+    } catch { /* error shown from store */ }
   };
 
   return (
@@ -47,20 +27,31 @@ export default function Login() {
           <h2>Welcome Back</h2>
           <p>Login to your Signova account</p>
         </div>
+
         {error && <div className="error-message">{error}</div>}
+
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-group">
             <label htmlFor="email">Email</label>
-            <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Enter your email" required />
+            <input
+              type="email" id="email" value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email" required
+            />
           </div>
           <div className="form-group">
             <label htmlFor="password">Password</label>
-            <input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password" required />
+            <input
+              type="password" id="password" value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password" required
+            />
           </div>
-          <button type="submit" className="auth-submit" disabled={loading}>
-            {loading ? 'Logging in...' : 'Login'}
+          <button type="submit" className="auth-submit" disabled={isLoading}>
+            {isLoading ? <><Loader2 size={16} className="spin" /> Logging in…</> : 'Login'}
           </button>
         </form>
+
         <div className="auth-footer">
           <p>Don&apos;t have an account? <Link to="/register">Sign up</Link></p>
         </div>

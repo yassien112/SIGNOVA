@@ -1,34 +1,23 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, Loader2 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
-import { getApiUrl } from '../lib/config';
 import '../styles/Auth.css';
 
 export default function Register() {
-  const [formData, setFormData] = useState({ name:'', email:'', password:'', role:'User' });
-  const [error,   setError]   = useState('');
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-  const setLogin = useAuthStore((s) => s.login);
-
-  const handleChange = (e) => setFormData((p) => ({ ...p, [e.target.id]: e.target.value }));
-  const handleRole   = (e) => setFormData((p) => ({ ...p, role: e.target.value }));
+  const [name,     setName]     = useState('');
+  const [email,    setEmail]    = useState('');
+  const [password, setPassword] = useState('');
+  const navigate  = useNavigate();
+  const { register, isLoading, error, clearError } = useAuthStore();
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); setLoading(true); setError('');
+    e.preventDefault();
+    clearError();
     try {
-      const response = await fetch(getApiUrl('/api/auth/register'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || 'Registration failed');
-      setLogin(data.user, data.token);
+      await register(name, email, password);
       navigate('/dashboard');
-    } catch (err) { setError(err.message); }
-    finally { setLoading(false); }
+    } catch { /* error shown from store */ }
   };
 
   return (
@@ -39,34 +28,39 @@ export default function Register() {
           <h2>Create Account</h2>
           <p>Join the Signova community</p>
         </div>
+
         {error && <div className="error-message">{error}</div>}
+
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-group">
             <label htmlFor="name">Full Name</label>
-            <input type="text" id="name" value={formData.name} onChange={handleChange} placeholder="Enter your name" required />
+            <input
+              type="text" id="name" value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter your name" required
+            />
           </div>
           <div className="form-group">
             <label htmlFor="email">Email</label>
-            <input type="email" id="email" value={formData.email} onChange={handleChange} placeholder="Enter your email" required />
+            <input
+              type="email" id="email" value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email" required
+            />
           </div>
           <div className="form-group">
             <label htmlFor="password">Password</label>
-            <input type="password" id="password" value={formData.password} onChange={handleChange} placeholder="Create a password" required />
+            <input
+              type="password" id="password" value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Create a password (min 8 chars)" required minLength={8}
+            />
           </div>
-          <div className="form-group">
-            <label>Select Role</label>
-            <div className="radio-group">
-              {['User','Admin'].map((r) => (
-                <label key={r} className="radio-label">
-                  <input type="radio" name="role" value={r} checked={formData.role===r} onChange={handleRole} /> {r}
-                </label>
-              ))}
-            </div>
-          </div>
-          <button type="submit" className="auth-submit" disabled={loading}>
-            {loading ? 'Creating Account...' : 'Sign Up'}
+          <button type="submit" className="auth-submit" disabled={isLoading}>
+            {isLoading ? <><Loader2 size={16} className="spin" /> Creating…</> : 'Sign Up'}
           </button>
         </form>
+
         <div className="auth-footer">
           <p>Already have an account? <Link to="/login">Login</Link></p>
         </div>

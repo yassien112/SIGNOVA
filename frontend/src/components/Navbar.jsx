@@ -1,92 +1,66 @@
-import React, { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import {
-  MessageSquare, Camera, LayoutDashboard,
-  User, Globe, LogOut, Menu, X, LogIn, UserPlus,
-} from 'lucide-react';
-import { useAuthStore } from '../store/authStore';
-import { useLanguage } from '../lib/LanguageContext';
+import React from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Hand, MessageSquare, User, Home, Camera, LogOut } from 'lucide-react';
+import { useAuthStore }  from '../store/authStore';
+import NotificationBell from './NotificationBell';
 import '../styles/Navbar.css';
 
+const NAV_LINKS = [
+  { to: '/',          icon: Home,          label: 'Home' },
+  { to: '/chat',      icon: MessageSquare, label: 'Chat',       auth: true },
+  { to: '/ai-camera', icon: Camera,        label: 'AI Camera',  auth: true },
+  { to: '/dashboard', icon: Hand,          label: 'Dashboard',  auth: true },
+  { to: '/profile',   icon: User,          label: 'Profile',    auth: true },
+];
+
 export default function Navbar() {
-  const location  = useLocation();
-  const navigate  = useNavigate();
-  const { user, isAuthenticated, logout } = useAuthStore();
-  const { lang, setLang, t } = useLanguage();
-  const [menuOpen, setMenuOpen] = useState(false);
+  const { isAuthenticated, user, logout } = useAuthStore();
+  const navigate   = useNavigate();
+  const { pathname } = useLocation();
 
-  const handleLogout = () => { logout(); navigate('/login'); setMenuOpen(false); };
-  const toggleLang   = () => setLang(lang === 'en' ? 'ar' : 'en');
-  const isActive     = (path) => location.pathname === path;
-
-  const authLinks = isAuthenticated
-    ? [
-        { path: '/dashboard', label: t('dashboard'), icon: LayoutDashboard },
-        { path: '/chat',      label: t('chat'),      icon: MessageSquare },
-        { path: '/ai-camera', label: t('aiCamera'),  icon: Camera },
-        { path: '/profile',   label: t('profile'),   icon: User },
-      ]
-    : [
-        { path: '/login',    label: t('login'),    icon: LogIn },
-        { path: '/register', label: t('register'), icon: UserPlus },
-      ];
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
 
   return (
     <nav className="navbar">
-      <div className="navbar-inner">
-        <Link to="/" className="nav-brand">
-          <div className="nav-brand-icon">S</div>
-          <span>Signova</span>
-        </Link>
+      {/* Brand */}
+      <Link to="/" className="navbar-brand">
+        <Hand size={22} className="navbar-brand-icon" />
+        <span>SIGNOVA</span>
+      </Link>
 
-        <div className="nav-links">
-          {authLinks.map(({ path, label, icon: Icon }) => (
-            <Link key={path} to={path} className={`nav-link${isActive(path) ? ' active' : ''}`}>
-              <Icon size={18} /><span>{label}</span>
-            </Link>
-          ))}
-        </div>
-
-        <div className="nav-actions">
-          <button className="nav-lang-btn" onClick={toggleLang}>
-            <Globe size={18} /><span>{lang === 'en' ? 'AR' : 'EN'}</span>
-          </button>
-          {isAuthenticated && (
-            <>
-              <div className="nav-user">
-                <div className="nav-avatar">{user?.name?.charAt(0)?.toUpperCase() || 'U'}</div>
-                <span className="nav-username">{user?.name}</span>
-              </div>
-              <button className="nav-logout-btn" onClick={handleLogout}>
-                <LogOut size={16} /><span>{t('logout')}</span>
-              </button>
-            </>
-          )}
-        </div>
-
-        <button className="nav-hamburger" onClick={() => setMenuOpen((v) => !v)}>
-          {menuOpen ? <X size={22} /> : <Menu size={22} />}
-        </button>
-      </div>
-
-      <div className={`nav-mobile${menuOpen ? ' open' : ''}`}>
-        {authLinks.map(({ path, label, icon: Icon }) => (
-          <Link key={path} to={path} onClick={() => setMenuOpen(false)}
-                className={`nav-mobile-link${isActive(path) ? ' active' : ''}`}>
-            <Icon size={18} /><span>{label}</span>
+      {/* Links */}
+      <div className="navbar-links">
+        {NAV_LINKS.filter((l) => !l.auth || isAuthenticated).map(({ to, icon: Icon, label }) => (
+          <Link
+            key={to}
+            to={to}
+            className={`navbar-link${pathname === to ? ' active' : ''}`}
+          >
+            <Icon size={16} />
+            <span>{label}</span>
           </Link>
         ))}
-        <div className="nav-mobile-bottom">
-          <button className="nav-lang-btn" onClick={() => { toggleLang(); setMenuOpen(false); }}>
-            <Globe size={16} />
-            <span>{lang === 'en' ? 'Switch to Arabic' : 'Switch to English'}</span>
-          </button>
-          {isAuthenticated && (
-            <button className="nav-logout-btn" onClick={handleLogout}>
-              <LogOut size={16} /><span>{t('logout')}</span>
+      </div>
+
+      {/* Right side */}
+      <div className="navbar-right">
+        {isAuthenticated ? (
+          <>
+            <NotificationBell />
+            <span className="navbar-username">{user?.name?.split(' ')[0]}</span>
+            <button type="button" className="navbar-logout" onClick={handleLogout} title="Logout">
+              <LogOut size={16} />
             </button>
-          )}
-        </div>
+          </>
+        ) : (
+          <>
+            <Link to="/login"    className="btn-ghost navbar-auth-btn">Login</Link>
+            <Link to="/register" className="btn-primary navbar-auth-btn">Sign Up</Link>
+          </>
+        )}
       </div>
     </nav>
   );
