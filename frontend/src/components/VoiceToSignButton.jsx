@@ -1,34 +1,28 @@
 import React from 'react';
 import { VoiceActionButton } from './VoiceActionButton';
 import { useVoiceToSign } from '../hooks/useVoiceToSign';
+import { useLanguage } from '../lib/LanguageContext';
 
 export function VoiceToSignButton({ language = 'ar-EG', onSignReady }) {
+  const { t } = useLanguage();
   const {
     isListening,
     isProcessing,
     isSupported,
     error,
     startRecognition,
-    clearError
-  } = useVoiceToSign({
-    language,
-    onSignReady
-  });
-
-  const handleVoiceClick = () => {
-    clearError();
-    startRecognition();
-  };
+    clearError,
+  } = useVoiceToSign({ language, onSignReady });
 
   return (
     <VoiceActionButton
-      label={'\uD83C\uDFA4\uD83E\uDD1F Voice to Sign'}
-      title="Click and speak to turn your voice into sign animations."
+      label={t('voiceToSign')}
+      title="Click and speak to convert your voice into sign language."
       isListening={isListening}
       isProcessing={isProcessing}
       isSupported={isSupported}
       error={error}
-      onStart={handleVoiceClick}
+      onStart={() => { clearError(); startRecognition(); }}
       onClearError={clearError}
     />
   );
