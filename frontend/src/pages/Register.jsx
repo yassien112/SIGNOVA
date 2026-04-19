@@ -4,163 +4,113 @@ import { UserPlus } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { getApiUrl } from '../lib/config';
 
-const Register = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    role: 'User'
-  });
-  const [error, setError] = useState('');
+export default function Register() {
+  const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'User' });
+  const [error,   setError]   = useState('');
   const [loading, setLoading] = useState(false);
-  
   const navigate = useNavigate();
-  const setLogin = useAuthStore(state => state.login);
+  const setLogin = useAuthStore((s) => s.login);
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.id]: e.target.value });
-  };
+  const handleChange = (e) => setFormData((p) => ({ ...p, [e.target.id]: e.target.value }));
+  const handleRole   = (e) => setFormData((p) => ({ ...p, role: e.target.value }));
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
+    e.preventDefault(); setLoading(true); setError('');
     try {
       const response = await fetch(getApiUrl('/api/auth/register'), {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
-
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Registration failed');
-      }
-
+      if (!response.ok) throw new Error(data.message || 'Registration failed');
       setLogin(data.user, data.token);
       navigate('/dashboard');
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { setError(err.message); }
+    finally { setLoading(false); }
   };
 
+  const inputCls = `px-4 py-3 bg-[#0F172A] border border-[#374151] rounded-lg
+    text-white text-base placeholder-[#6B7280]
+    focus:border-[#1E3A8A] focus:outline-none transition-colors w-full`;
+
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <div className="auth-header">
-          <div className="logo-icon-large">
+    <div className="flex justify-center items-center min-h-[calc(100vh-120px)] px-4">
+
+      <div className="w-full max-w-[440px] bg-[#1F2937] border border-[#374151]
+                      rounded-2xl p-10 shadow-[0_10px_30px_rgba(0,0,0,0.4)]">
+
+        {/* header */}
+        <div className="flex flex-col items-center text-center mb-8">
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4
+                          bg-gradient-to-br from-[#1E3A8A] to-[#1e40af]
+                          shadow-[0_8px_20px_rgba(30,58,138,0.4)]">
             <UserPlus size={32} color="white" />
           </div>
-          <h2>Create Account</h2>
-          <p>Join the Signova community</p>
+          <h2 className="text-[1.75rem] font-bold text-white mb-1">Create Account</h2>
+          <p className="text-[#9CA3AF]">Join the Signova community</p>
         </div>
 
-        {error && <div className="error-message">{error}</div>}
+        {error && (
+          <div className="bg-[rgba(239,68,68,0.1)] text-[#EF4444] border border-[rgba(239,68,68,0.3)]
+                          rounded-lg px-3 py-3 mb-6 text-center text-sm">
+            {error}
+          </div>
+        )}
 
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-group">
-            <label htmlFor="name">Full Name</label>
-            <input 
-              type="text" 
-              id="name" 
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="Enter your name" 
-              required 
-            />
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          <div className="flex flex-col gap-2">
+            <label htmlFor="name" className="text-sm font-medium text-[#9CA3AF]">Full Name</label>
+            <input type="text" id="name" value={formData.name} onChange={handleChange}
+                   placeholder="Enter your name" required className={inputCls} />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
-            <input 
-              type="email" 
-              id="email" 
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Enter your email" 
-              required 
-            />
+          <div className="flex flex-col gap-2">
+            <label htmlFor="email" className="text-sm font-medium text-[#9CA3AF]">Email</label>
+            <input type="email" id="email" value={formData.email} onChange={handleChange}
+                   placeholder="Enter your email" required className={inputCls} />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input 
-              type="password" 
-              id="password" 
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Create a password" 
-              required 
-            />
+          <div className="flex flex-col gap-2">
+            <label htmlFor="password" className="text-sm font-medium text-[#9CA3AF]">Password</label>
+            <input type="password" id="password" value={formData.password} onChange={handleChange}
+                   placeholder="Create a password" required className={inputCls} />
           </div>
 
-          <div className="form-group role-selector">
-            <label>Select Role</label>
-            <div className="radio-group">
-                <label className="radio-label">
-                    <input 
-                        type="radio" 
-                        name="role" 
-                        id="role" 
-                        value="User" 
-                        checked={formData.role === 'User'} 
-                        onChange={handleChange} 
-                    /> User
+          {/* Role */}
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-[#9CA3AF]">Select Role</label>
+            <div className="flex gap-6 mt-1">
+              {['User', 'Admin'].map((r) => (
+                <label key={r} className="flex items-center gap-2 text-white cursor-pointer">
+                  <input type="radio" name="role" value={r}
+                         checked={formData.role === r} onChange={handleRole}
+                         className="accent-[#1E3A8A]" />
+                  {r}
                 </label>
-                <label className="radio-label">
-                    <input 
-                        type="radio" 
-                        name="role" 
-                        id="role" 
-                        value="Admin" 
-                        checked={formData.role === 'Admin'} 
-                        onChange={handleChange} 
-                    /> Admin
-                </label>
+              ))}
             </div>
           </div>
 
-          <button type="submit" className="btn-primary auth-submit" disabled={loading}>
+          <button
+            type="submit" disabled={loading}
+            className="w-full py-[0.875rem] rounded-lg text-base font-semibold mt-2
+                       bg-[#1E3A8A] text-white border-none cursor-pointer
+                       hover:bg-[#1e40af] disabled:opacity-70 disabled:cursor-not-allowed
+                       transition-colors"
+          >
             {loading ? 'Creating Account...' : 'Sign Up'}
           </button>
         </form>
 
-        <div className="auth-footer">
-          <p>Already have an account? <Link to="/login">Login</Link></p>
+        <div className="text-center mt-8 text-sm text-[#9CA3AF]">
+          <p>Already have an account?{' '}
+            <Link to="/login" className="text-[#1E3A8A] font-medium hover:text-[#1e40af] hover:underline transition-colors">
+              Login
+            </Link>
+          </p>
         </div>
       </div>
-
-      <style jsx="true">{`
-        /* Reuse styles from Login but define radio group specific styles */
-        .auth-container { display: flex; justify-content: center; alignItems: center; min-height: calc(100vh - 120px); }
-        .auth-card { background-color: var(--bg-secondary); width: 100%; max-width: 440px; padding: 2.5rem; border-radius: 16px; border: 1px solid var(--border-color); box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
-        .auth-header { text-align: center; margin-bottom: 2rem; }
-        .logo-icon-large { width: 64px; height: 64px; background: linear-gradient(135deg, var(--primary), var(--primary-hover)); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; box-shadow: 0 8px 20px rgba(30, 58, 138, 0.4); }
-        .auth-header h2 { font-size: 1.75rem; margin-bottom: 0.5rem; color: white; }
-        .auth-header p { color: var(--text-secondary); }
-        .error-message { background-color: rgba(239, 68, 68, 0.1); color: var(--danger); padding: 0.75rem; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.3); margin-bottom: 1.5rem; text-align: center; font-size: 0.9rem; }
-        .auth-form { display: flex; flex-direction: column; gap: 1.25rem; }
-        .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
-        .form-group label { font-size: 0.9rem; font-weight: 500; color: var(--text-secondary); }
-        .form-group input[type="text"], .form-group input[type="email"], .form-group input[type="password"] { padding: 0.75rem 1rem; background-color: var(--main-bg, var(--bg-main)); border: 1px solid var(--border-color); border-radius: 8px; color: white; font-size: 1rem; transition: border-color 0.2s; }
-        .form-group input:focus { border-color: var(--primary); }
-        .radio-group { display: flex; gap: 1.5rem; margin-top: 0.25rem; }
-        .radio-label { display: flex; align-items: center; gap: 0.5rem; color: var(--text-primary); cursor: pointer; }
-        .auth-submit { width: 100%; padding: 0.875rem; border-radius: 8px; font-size: 1rem; font-weight: 600; margin-top: 0.5rem; background-color: var(--primary); color: white; border: none; cursor: pointer; transition: background-color 0.2s; }
-        .auth-submit:hover:not(:disabled) { background-color: var(--primary-hover); }
-        .auth-submit:disabled { opacity: 0.7; cursor: not-allowed; }
-        .auth-footer { text-align: center; margin-top: 2rem; font-size: 0.9rem; color: var(--text-secondary); }
-        .auth-footer a { color: var(--primary); font-weight: 500; transition: color 0.2s; }
-        .auth-footer a:hover { color: var(--primary-hover); text-decoration: underline; }
-      `}</style>
     </div>
   );
-};
-
-export default Register;
+}
