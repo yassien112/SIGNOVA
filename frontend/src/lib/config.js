@@ -18,16 +18,13 @@ export function getApiUrl(path) {
   return `${API_BASE}${normalised}`;
 }
 
-/**
- * Socket URL for the chat namespace.
- */
-export function getChatSocketUrl() {
-  return BASE_URL;
-}
+/** Socket URLs */
+export function getChatSocketUrl()  { return BASE_URL; }
+export function getSocketUrl()      { return BASE_URL; }
 
 /**
- * Generic socket URL (same server).
+ * Legacy / AI camera exports — kept for backward compatibility
+ * with AICamera.jsx, InlineCameraPanel.jsx, useAICamera.js, useVoiceToSign.js
  */
-export function getSocketUrl() {
-  return BASE_URL;
-}
+export const TEXT_TO_SIGN_API_URL    = `${API_BASE}/speech/text-to-signs`;
+export const SIGN_LANGUAGE_SOCKET_URL = BASE_URL;
