@@ -8,7 +8,7 @@
   gap: 1.75rem;
 }
 
-/* Header */
+/* ── Header ── */
 .ai-camera-header {
   text-align: center;
   display: flex;
@@ -66,7 +66,7 @@
   border-color: rgba(127,29,29,0.4);
 }
 
-/* Camera viewport */
+/* ── Camera viewport ── */
 .ai-camera-viewport {
   position: relative;
   background: #1f2937;
@@ -104,7 +104,7 @@
   transform: scaleX(-1);
 }
 
-/* Camera-off overlay */
+/* ── Camera-off overlay ── */
 .ai-camera-overlay {
   position: absolute;
   inset: 0;
@@ -118,11 +118,9 @@
   z-index: 20;
 }
 
-.ai-camera-icon {
-  color: #4b5563;
-}
+.ai-camera-icon { color: #4b5563; }
 
-/* Scanning animation overlay when active */
+/* ── Scanning animation ── */
 .ai-scan-line {
   position: absolute;
   top: 0;
@@ -141,7 +139,7 @@
   100% { top: 0%;   opacity: 1; }
 }
 
-/* Corner brackets */
+/* ── Corner brackets ── */
 .ai-bracket {
   position: absolute;
   width: 40px;
@@ -155,7 +153,7 @@
 .ai-bracket.bl { bottom: 16px; left: 16px; border-bottom: 2px solid #3b82f6; border-left: 2px solid #3b82f6; border-radius: 0 0 0 4px; }
 .ai-bracket.br { bottom: 16px; right: 16px; border-bottom: 2px solid #3b82f6; border-right: 2px solid #3b82f6; border-radius: 0 0 4px 0; }
 
-/* Controls panel */
+/* ── Controls panel ── */
 .ai-controls {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
@@ -166,7 +164,7 @@
   gap: 1rem;
 }
 
-/* Translation result box */
+/* ── Translation result ── */
 .ai-result-box {
   position: relative;
   background: #0f172a;
@@ -177,9 +175,7 @@
   transition: border-color 0.2s;
 }
 
-.ai-result-box.has-text {
-  border-color: #1d4ed8;
-}
+.ai-result-box.has-text { border-color: #1d4ed8; }
 
 .ai-result-label {
   color: #6b7280;
@@ -195,12 +191,10 @@
   font-size: 1.25rem;
   font-weight: 500;
   line-height: 1.4;
+  word-break: break-word;
 }
 
-.ai-result-empty {
-  color: #4b5563;
-  font-size: 1.1rem;
-}
+.ai-result-empty { color: #4b5563; font-size: 1.1rem; }
 
 .ai-confidence {
   position: absolute;
@@ -219,7 +213,7 @@
 }
 html[dir='rtl'] .ai-confidence { right: auto; left: 0.75rem; }
 
-/* Action buttons row */
+/* ── Actions ── */
 .ai-actions {
   display: flex;
   align-items: center;
@@ -228,9 +222,71 @@ html[dir='rtl'] .ai-confidence { right: auto; left: 0.75rem; }
   flex-wrap: wrap;
 }
 
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .ai-camera-page {
+    gap: 1.25rem;
+  }
+
+  .ai-camera-title {
+    font-size: 1.65rem;
+  }
+
+  .ai-camera-viewport {
+    min-height: 300px;
+    border-radius: 16px;
+  }
+
+  .ai-result-text {
+    font-size: 1.1rem;
+  }
+}
+
 @media (max-width: 600px) {
-  .ai-camera-title { font-size: 1.5rem; }
-  .ai-camera-viewport { min-height: 260px; }
-  .ai-actions { justify-content: stretch; }
-  .ai-actions button { flex: 1; justify-content: center; }
+  .ai-camera-title {
+    font-size: 1.4rem;
+  }
+
+  .ai-camera-viewport {
+    min-height: 240px;
+    border-radius: 14px;
+  }
+
+  .ai-camera-status-row {
+    gap: 0.5rem;
+  }
+
+  .ai-controls {
+    padding: 1rem;
+  }
+
+  .ai-actions {
+    justify-content: stretch;
+  }
+
+  .ai-actions button {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .ai-result-text {
+    font-size: 1rem;
+    padding-right: 4.5rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .ai-camera-viewport {
+    min-height: 200px;
+    border-radius: 12px;
+  }
+
+  .ai-badge {
+    font-size: .7rem;
+    padding: .2rem .55rem;
+  }
+
+  .ai-camera-subtitle {
+    font-size: .8rem;
+  }
 }

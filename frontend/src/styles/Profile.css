@@ -15,7 +15,7 @@
   align-items: start;
 }
 
-/* Sidebar */
+/* ── Sidebar ── */
 .profile-sidebar {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
@@ -28,7 +28,7 @@
   text-align: center;
 }
 
-/* Avatar */
+/* ── Avatar ── */
 .avatar-wrap {
   position: relative;
   cursor: pointer;
@@ -40,6 +40,7 @@
   border-radius: 50%;
   object-fit: cover;
   border: 3px solid #1d4ed8;
+  display: block;
 }
 
 .avatar-initials {
@@ -84,6 +85,7 @@
   gap: 0.375rem;
   justify-content: center;
   margin: 0.25rem 0 0;
+  word-break: break-all;
 }
 
 .profile-meta {
@@ -99,11 +101,12 @@
   display: flex;
   justify-content: space-between;
   font-size: 0.8rem;
+  gap: .5rem;
 }
-.profile-meta-row span:first-child { color: #6b7280; }
-.profile-meta-row span:last-child  { color: #e5e7eb; font-weight: 500; }
+.profile-meta-row span:first-child { color: #6b7280; white-space: nowrap; }
+.profile-meta-row span:last-child  { color: #e5e7eb; font-weight: 500; text-align: right; word-break: break-word; }
 
-/* Form card */
+/* ── Form card ── */
 .profile-form-card {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
@@ -130,8 +133,57 @@
   font-weight: 500;
 }
 
+/* ── Responsive ── */
 @media (max-width: 700px) {
-  .profile-grid { grid-template-columns: 1fr; }
-  .profile-sidebar { flex-direction: row; text-align: left; align-items: flex-start; }
-  html[dir='rtl'] .profile-sidebar { text-align: right; }
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-sidebar {
+    flex-direction: row;
+    text-align: left;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1.25rem;
+  }
+
+  html[dir='rtl'] .profile-sidebar {
+    text-align: right;
+  }
+
+  .profile-meta {
+    width: 100%;
+  }
+
+  .profile-email {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-sidebar {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .profile-email {
+    justify-content: center;
+  }
+
+  .profile-meta-row span:last-child {
+    text-align: left;
+  }
+
+  .profile-form-card {
+    padding: 1rem;
+  }
+
+  .avatar-img,
+  .avatar-initials {
+    width: 80px;
+    height: 80px;
+    font-size: 1.5rem;
+  }
 }

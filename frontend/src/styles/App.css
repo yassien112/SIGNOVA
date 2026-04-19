@@ -8,12 +8,38 @@
 
 .app-main {
   flex: 1;
-  padding: 2rem;
+  padding-top: calc(var(--navbar-h, 60px) + 1.5rem);
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  padding-bottom: 2rem;
   max-width: 1400px;
   width: 100%;
   margin: 0 auto;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1024px) {
+  .app-main {
+    padding-top: calc(var(--navbar-h, 60px) + 1.25rem);
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
 }
 
 @media (max-width: 768px) {
-  .app-main { padding: 1rem; }
+  .app-main {
+    padding-top: calc(var(--navbar-h, 60px) + 1rem);
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-bottom: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-main {
+    padding-top: calc(var(--navbar-h, 60px) + .75rem);
+    padding-left: .75rem;
+    padding-right: .75rem;
+    padding-bottom: 1.25rem;
+  }
 }
