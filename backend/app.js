@@ -8,6 +8,7 @@ import { createSignLanguageRouter } from './routes/signLanguageRoutes.js';
 import { createSpeechToTextRouter } from './routes/speechToTextRoutes.js';
 import { createTextToSignRouter } from './routes/textToSignRoutes.js';
 import { createUserRouter } from './routes/userRoutes.js';
+import { createAdminRouter } from './routes/adminRoutes.js';
 
 export function createApp({
   prisma,
@@ -20,7 +21,7 @@ export function createApp({
   const app = express();
 
   app.use(cors({ origin: true, credentials: false }));
-  app.use(express.json({ limit: '1mb' }));
+  app.use(express.json({ limit: '4mb' }));
 
   app.get('/api/health', async (req, res) => {
     const speech = speechToTextService.getAvailabilityDetail();
@@ -28,8 +29,8 @@ export function createApp({
       prisma.user.count(),
       prisma.chat.count(),
       prisma.message.count(),
-      prisma.sign?.count?.() ?? 0,
-      prisma.signPack?.count?.() ?? 0,
+      prisma.sign.count(),
+      prisma.signPack.count(),
     ]);
     res.json({
       status: 'ok',
@@ -55,6 +56,7 @@ export function createApp({
   app.use('/api/speech-to-text', createSpeechToTextRouter(speechToTextService, {
     maxFileSizeBytes: speechToTextConfig.maxFileSizeBytes
   }));
+  app.use('/api/admin',          createAdminRouter({ prisma, jwtSecret }));
 
   app.use((error, req, res, next) => {
     console.error(error);
@@ -62,7 +64,8 @@ export function createApp({
       return res.status(413).json({ message: 'Uploaded audio is too large. Keep recordings under 25 MB.' });
     }
     const statusCode =
-      error.message === 'Sign language session not found' ? 404 : error.statusCode || 500;
+      error.message === 'Sign language session not found' ? 404 :
+      error.statusCode || 500;
     res.status(statusCode).json({
       message: statusCode === 500 ? 'Unexpected server error' : error.message
     });
