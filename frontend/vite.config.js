@@ -1,33 +1,59 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import basicSsl from '@vitejs/plugin-basic-ssl';
 
-// Match the backend PORT (default 5000). Override if needed, e.g. VITE_DEV_PROXY_TARGET=http://127.0.0.1:5000
-const backendOrigin = process.env.VITE_DEV_PROXY_TARGET || 'http://localhost:5000';
+export default defineConfig(({ mode }) => {
+  // Load env variables for this mode (development / production)
+  const env = loadEnv(mode, process.cwd(), '');
 
-// Set VITE_DEV_HTTPS=1 for microphone-friendly HTTPS on phones (self-signed cert; tap "Advanced" → proceed once).
-const useDevHttps =
-  process.env.VITE_DEV_HTTPS === '1' ||
-  process.env.VITE_DEV_HTTPS === 'true' ||
-  process.env.VITE_DEV_HTTPS === 'yes';
+  /**
+   * Where the Node backend listens in development.
+   * Override with VITE_DEV_PROXY_TARGET in frontend/.env if your backend
+   * runs on a different port or host.
+   *
+   * IMPORTANT: this proxy is only active during `npm run dev`.
+   * In production (Vercel) the VITE_BACKEND_URL env var is used instead.
+   */
+  const backendOrigin =
+    env.VITE_DEV_PROXY_TARGET ||
+    env.VITE_BACKEND_URL ||
+    'http://localhost:5000';
 
-export default defineConfig({
-  plugins: [react(), ...(useDevHttps ? [basicSsl()] : [])],
-  server: {
-    host: '0.0.0.0',
-    port: 3000,
-    strictPort: false,
-    https: useDevHttps ? {} : undefined,
-    proxy: {
-      '/api': {
-        target: backendOrigin,
-        changeOrigin: true
+  // Set VITE_DEV_HTTPS=1 to enable HTTPS (needed for microphone on phones over LAN)
+  const useDevHttps =
+    env.VITE_DEV_HTTPS === '1' ||
+    env.VITE_DEV_HTTPS === 'true' ||
+    env.VITE_DEV_HTTPS === 'yes';
+
+  return {
+    plugins: [react(), ...(useDevHttps ? [basicSsl()] : [])],
+
+    server: {
+      host: '0.0.0.0',   // listen on LAN + localhost
+      port: 3000,
+      strictPort: false,
+      https: useDevHttps ? {} : undefined,
+
+      proxy: {
+        // REST API
+        '/api': {
+          target: backendOrigin,
+          changeOrigin: true,
+          secure: false,
+        },
+        // Socket.IO (HTTP upgrade + WebSocket)
+        '/socket.io': {
+          target: backendOrigin,
+          changeOrigin: true,
+          ws: true,
+          secure: false,
+        },
       },
-      '/socket.io': {
-        target: backendOrigin,
-        changeOrigin: true,
-        ws: true
-      }
-    }
-  }
+    },
+
+    // Make VITE_BACKEND_URL available in the built bundle
+    define: {
+      __BACKEND_URL__: JSON.stringify(env.VITE_BACKEND_URL || ''),
+    },
+  };
 });
