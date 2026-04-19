@@ -23,6 +23,13 @@ async function main() {
           avatar: 'https://i.pravatar.cc/150?u=sarah',
           isOnline: false,
         },
+        {
+          name: 'New Account',
+          email: 'newaccount@example.com',
+          password: hashedPassword,
+          avatar: 'https://i.pravatar.cc/150?u=newaccount',
+          isOnline: false,
+        },
       ],
     });
   }

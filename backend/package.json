@@ -9,7 +9,8 @@
     "dev": "nodemon server.js",
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
-    "test": "node --test"
+    "test": "node --test",
+    "build": "node --test"
   },
   "dependencies": {
     "@prisma/client": "^6.4.1",
