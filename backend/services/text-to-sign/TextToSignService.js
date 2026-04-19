@@ -3,16 +3,7 @@ const PHRASE_ENTRIES = Object.freeze([
     key: 'go-to-school',
     label: 'GO TO SCHOOL',
     assetPath: '/signs/go-to-school.svg',
-    aliases: [
-      'go to school',
-      'go school',
-      'to school',
-      'go to the school',
-      'اذهب الى المدرسة',
-      'اذهب للمدرسة',
-      'روح المدرسة',
-      'روح على المدرسة'
-    ]
+    aliases: ['go to school', 'go school', 'to school', 'go to the school', 'اذهب الى المدرسة', 'اذهب للمدرسة', 'روح المدرسة', 'روح على المدرسة']
   },
   {
     key: 'thank-you',
@@ -24,107 +15,57 @@ const PHRASE_ENTRIES = Object.freeze([
     key: 'how-are-you',
     label: 'HOW ARE YOU',
     assetPath: '/signs/how-are-you.svg',
-    aliases: [
-      'how are you',
-      'how are you doing',
-      'how are you today',
-      'كيف حالك',
-      'كيفك',
-      'ازيك',
-      'عامل ايه'
-    ]
+    aliases: ['how are you', 'how are you doing', 'how are you today', 'كيف حالك', 'كيفك', 'ازيك', 'عامل ايه']
+  },
+  {
+    key: 'good-morning',
+    label: 'GOOD MORNING',
+    assetPath: '/signs/good.svg',
+    aliases: ['good morning', 'صباح الخير']
+  },
+  {
+    key: 'good-night',
+    label: 'GOOD NIGHT',
+    assetPath: '/signs/good.svg',
+    aliases: ['good night', 'تصبح على خير', 'مساء الخير']
+  },
+  {
+    key: 'i-love-you',
+    label: 'I LOVE YOU',
+    assetPath: '/signs/love.svg',
+    aliases: ['i love you', 'احبك', 'أنا أحبك']
+  },
+  {
+    key: 'where-is-bathroom',
+    label: 'WHERE IS BATHROOM',
+    assetPath: '/signs/help.svg',
+    aliases: ['where is bathroom', 'bathroom please', 'فين الحمام', 'اين الحمام']
   }
 ]);
 
 const WORD_ENTRIES = Object.freeze([
-  {
-    key: 'hello',
-    label: 'HELLO',
-    assetPath: '/signs/hello.svg',
-    aliases: ['hello', 'hi', 'hey', 'مرحبا', 'اهلا']
-  },
-  {
-    key: 'yes',
-    label: 'YES',
-    assetPath: '/signs/yes.svg',
-    aliases: ['yes', 'yeah', 'yep', 'نعم', 'ايوه']
-  },
-  {
-    key: 'no',
-    label: 'NO',
-    assetPath: '/signs/no.svg',
-    aliases: ['no', 'nope', 'لا']
-  },
-  {
-    key: 'help',
-    label: 'HELP',
-    assetPath: '/signs/help.svg',
-    aliases: ['help', 'assist', 'مساعدة', 'ساعدني']
-  },
-  {
-    key: 'eat',
-    label: 'EAT',
-    assetPath: '/signs/eat.svg',
-    aliases: ['eat', 'food', 'اكل', 'طعام']
-  },
-  {
-    key: 'drink',
-    label: 'DRINK',
-    assetPath: '/signs/drink.svg',
-    aliases: ['drink', 'water', 'اشرب', 'شرب', 'ماء']
-  },
-  {
-    key: 'go',
-    label: 'GO',
-    assetPath: '/signs/go.svg',
-    aliases: ['go', 'leave', 'اذهب', 'روح']
-  },
-  {
-    key: 'stop',
-    label: 'STOP',
-    assetPath: '/signs/stop.svg',
-    aliases: ['stop', 'wait', 'قف', 'توقف']
-  },
-  {
-    key: 'come',
-    label: 'COME',
-    assetPath: '/signs/come.svg',
-    aliases: ['come', 'arrive', 'here', 'تعال', 'تعالى']
-  },
-  {
-    key: 'school',
-    label: 'SCHOOL',
-    assetPath: '/signs/school.svg',
-    aliases: ['school', 'class', 'مدرسة', 'مدرسه']
-  }
+  { key: 'hello', label: 'HELLO', assetPath: '/signs/hello.svg', aliases: ['hello', 'hi', 'hey', 'مرحبا', 'اهلا'] },
+  { key: 'yes', label: 'YES', assetPath: '/signs/yes.svg', aliases: ['yes', 'yeah', 'yep', 'نعم', 'ايوه'] },
+  { key: 'no', label: 'NO', assetPath: '/signs/no.svg', aliases: ['no', 'nope', 'لا'] },
+  { key: 'help', label: 'HELP', assetPath: '/signs/help.svg', aliases: ['help', 'assist', 'مساعدة', 'ساعدني'] },
+  { key: 'eat', label: 'EAT', assetPath: '/signs/eat.svg', aliases: ['eat', 'food', 'اكل', 'طعام'] },
+  { key: 'drink', label: 'DRINK', assetPath: '/signs/drink.svg', aliases: ['drink', 'water', 'اشرب', 'شرب', 'ماء'] },
+  { key: 'go', label: 'GO', assetPath: '/signs/go.svg', aliases: ['go', 'leave', 'اذهب', 'روح'] },
+  { key: 'stop', label: 'STOP', assetPath: '/signs/stop.svg', aliases: ['stop', 'wait', 'قف', 'توقف'] },
+  { key: 'come', label: 'COME', assetPath: '/signs/come.svg', aliases: ['come', 'arrive', 'here', 'تعال', 'تعالى'] },
+  { key: 'school', label: 'SCHOOL', assetPath: '/signs/school.svg', aliases: ['school', 'class', 'مدرسة', 'مدرسه'] },
+  { key: 'good', label: 'GOOD', assetPath: '/signs/good.svg', aliases: ['good', 'great', 'nice', 'كويس', 'جيد'] },
+  { key: 'bad', label: 'BAD', assetPath: '/signs/bad.svg', aliases: ['bad', 'سيئ', 'وحش'] },
+  { key: 'love', label: 'LOVE', assetPath: '/signs/love.svg', aliases: ['love', 'حب', 'احب'] },
+  { key: 'sorry', label: 'SORRY', assetPath: '/signs/sorry.svg', aliases: ['sorry', 'اسف', 'آسف'] },
+  { key: 'please', label: 'PLEASE', assetPath: '/signs/please.svg', aliases: ['please', 'من فضلك', 'لو سمحت'] },
+  { key: 'bathroom', label: 'BATHROOM', assetPath: '/signs/help.svg', aliases: ['bathroom', 'toilet', 'حمام'] },
+  { key: 'name', label: 'NAME', assetPath: '/signs/hello.svg', aliases: ['name', 'اسم'] },
+  { key: 'work', label: 'WORK', assetPath: '/signs/go.svg', aliases: ['work', 'job', 'عمل', 'شغل'] },
+  { key: 'home', label: 'HOME', assetPath: '/signs/come.svg', aliases: ['home', 'house', 'بيت', 'منزل'] }
 ]);
 
-const IGNORED_WORDS = new Set([
-  'a',
-  'an',
-  'the',
-  'to',
-  'and',
-  'are',
-  'is',
-  'am',
-  'be',
-  'i',
-  'you',
-  'me',
-  'my',
-  'your',
-  'our',
-  'please',
-  'now',
-  'today',
-  'في',
-  'على',
-  'الى',
-  'إلى',
-  'و',
-  'هل'
-]);
+const IGNORED_WORDS = new Set(['a', 'an', 'the', 'to', 'and', 'are', 'is', 'am', 'be', 'i', 'you', 'me', 'my', 'your', 'our', 'please', 'now', 'today', 'في', 'على', 'الى', 'إلى', 'و', 'هل']);
 
 function normalizeText(text) {
   return String(text ?? '')
@@ -136,19 +77,16 @@ function normalizeText(text) {
 
 function buildLookup(entries) {
   const lookup = new Map();
-
   for (const entry of entries) {
     for (const alias of entry.aliases) {
       lookup.set(normalizeText(alias), entry);
     }
   }
-
   return lookup;
 }
 
 function buildWordLookup(wordEntries, phraseEntries) {
   const lookup = buildLookup(wordEntries);
-
   for (const entry of phraseEntries) {
     for (const alias of entry.aliases) {
       const normalizedAlias = normalizeText(alias);
@@ -157,7 +95,6 @@ function buildWordLookup(wordEntries, phraseEntries) {
       }
     }
   }
-
   return lookup;
 }
 
@@ -172,7 +109,11 @@ function toResponse(normalizedText, matchedEntries, missingWords) {
       key: entry.key,
       label: entry.label,
       assetPath: entry.assetPath
-    }))
+    })),
+    supportedEntries: {
+      phrases: PHRASE_ENTRIES.length,
+      words: WORD_ENTRIES.length
+    }
   };
 }
 
@@ -181,34 +122,24 @@ export class TextToSignService {
     this.phraseLookup = buildLookup(PHRASE_ENTRIES);
     this.wordLookup = buildWordLookup(WORD_ENTRIES, PHRASE_ENTRIES);
     this.cache = new Map();
-    this.maxPhraseLength = Math.max(
-      2,
-      ...Array.from(this.phraseLookup.keys(), (alias) => alias.split(' ').length)
-    );
+    this.maxPhraseLength = Math.max(2, ...Array.from(this.phraseLookup.keys(), (alias) => alias.split(' ').length));
   }
 
   findPhraseMatch(tokens, startIndex) {
     const remaining = tokens.length - startIndex;
     const maxWindow = Math.min(this.maxPhraseLength, remaining);
-
     for (let size = maxWindow; size >= 2; size -= 1) {
       const candidate = tokens.slice(startIndex, startIndex + size).join(' ').trim();
       const entry = this.phraseLookup.get(candidate);
-
       if (entry) {
-        return {
-          entry,
-          consumed: size
-        };
+        return { entry, consumed: size };
       }
     }
-
     return null;
   }
 
   translate(inputText) {
     const normalizedText = normalizeText(inputText);
-
     if (!normalizedText) {
       return toResponse('', [], []);
     }
@@ -224,7 +155,6 @@ export class TextToSignService {
 
     for (let index = 0; index < tokens.length; ) {
       const phraseMatch = this.findPhraseMatch(tokens, index);
-
       if (phraseMatch) {
         matchedEntries.push(phraseMatch.entry);
         index += phraseMatch.consumed;
@@ -233,13 +163,11 @@ export class TextToSignService {
 
       const token = tokens[index];
       const wordMatch = this.wordLookup.get(token);
-
       if (wordMatch) {
         matchedEntries.push(wordMatch);
       } else if (!IGNORED_WORDS.has(token)) {
         missingWords.push(token);
       }
-
       index += 1;
     }
 

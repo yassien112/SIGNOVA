@@ -9,45 +9,54 @@ datasource db {
 }
 
 model User {
-  id           String         @id @default(uuid())
-  name         String
-  email        String         @unique
-  password     String
-  role         String         @default("User")
-  isOnline     Boolean        @default(false)
-  avatar       String?
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  id            String         @id @default(uuid())
+  name          String
+  email         String         @unique
+  password      String
+  role          String         @default("User")
+  isOnline      Boolean        @default(false)
+  avatar        String?
+  bio           String?
+  preferredLang String         @default("en")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
-  messages     Message[]
-  chats        Chat[]         @relation("ChatParticipants")
+  messages      Message[]
+  chats         Chat[]         @relation("ChatParticipants")
   notifications Notification[]
 }
 
 model Chat {
   id           String    @id @default(uuid())
+  title        String?
+  isGroup      Boolean   @default(false)
+  isGlobal     Boolean   @default(false)
   participants User[]    @relation("ChatParticipants")
   messages     Message[]
   createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }
 
 model Message {
-  id        String   @id @default(uuid())
-  text      String
-  senderId  String
-  sender    User     @relation(fields: [senderId], references: [id])
-  chatId    String
-  chat      Chat     @relation(fields: [chatId], references: [id])
-  status    String   @default("sent")
-  createdAt DateTime @default(now())
+  id          String   @id @default(uuid())
+  text        String
+  kind        String   @default("text")
+  sourceText  String?
+  senderId    String
+  sender      User     @relation(fields: [senderId], references: [id])
+  chatId      String
+  chat        Chat     @relation(fields: [chatId], references: [id])
+  status      String   @default("sent")
+  metadata    Json?
+  createdAt   DateTime @default(now())
 }
 
 model Notification {
-  id          String   @id @default(uuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  type        String
-  message     String
-  readStatus  Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  type       String
+  message    String
+  readStatus Boolean  @default(false)
+  createdAt  DateTime @default(now())
 }

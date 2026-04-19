@@ -1,53 +1,151 @@
 import express from 'express';
-import db from '../database.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
+import { createAuthMiddleware } from '../utils/authMiddleware.js';
 
-const router = express.Router();
+export function createChatRouter({ prisma, jwtSecret }) {
+  const router = express.Router();
+  const auth = createAuthMiddleware(jwtSecret);
 
-// Get all chats for a user
-router.get('/user/:userId', (req, res) => {
-  const { userId } = req.params;
-  try {
-    const chats = db.prepare('SELECT * FROM Chats').all();
-    const userChats = chats.filter(chat => {
-      const participants = JSON.parse(chat.participants);
-      return participants.includes(userId);
-    });
-    
-    const enrichedChats = userChats.map(chat => {
-      const lastMessage = db.prepare('SELECT * FROM Messages WHERE chat_id = ? ORDER BY created_at DESC LIMIT 1').get(chat.id);
-      
-      const participants = JSON.parse(chat.participants);
-      const otherUserId = participants.find(p => p !== userId) || userId;
-      const otherUser = db.prepare('SELECT id, name, avatar, is_online, last_seen FROM Users WHERE id = ?').get(otherUserId);
-      
-      return {
-        ...chat,
-        lastMessage,
-        otherUser
-      };
-    });
-    
-    enrichedChats.sort((a, b) => {
-        const timeA = a.lastMessage ? new Date(a.lastMessage.created_at).getTime() : new Date(a.created_at).getTime();
-        const timeB = b.lastMessage ? new Date(b.lastMessage.created_at).getTime() : new Date(b.created_at).getTime();
-        return timeB - timeA;
-    });
-    
-    res.json(enrichedChats);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+  router.get(
+    '/',
+    auth,
+    asyncHandler(async (req, res) => {
+      const chats = await prisma.chat.findMany({
+        where: {
+          OR: [
+            { isGlobal: true },
+            { participants: { some: { id: req.auth.userId } } }
+          ]
+        },
+        orderBy: { updatedAt: 'desc' },
+        select: {
+          id: true,
+          title: true,
+          isGroup: true,
+          isGlobal: true,
+          createdAt: true,
+          updatedAt: true,
+          participants: {
+            select: { id: true, name: true, avatar: true, isOnline: true }
+          },
+          messages: {
+            take: 1,
+            orderBy: { createdAt: 'desc' },
+            select: {
+              id: true,
+              text: true,
+              kind: true,
+              createdAt: true,
+              senderId: true
+            }
+          }
+        }
+      });
 
-// Get messages for a chat
-router.get('/:chatId/messages', (req, res) => {
-  const { chatId } = req.params;
-  try {
-    const messages = db.prepare('SELECT * FROM Messages WHERE chat_id = ? ORDER BY created_at ASC').all(chatId);
-    res.json(messages);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+      res.json({ chats });
+    })
+  );
 
-export default router;
+  router.get(
+    '/:chatId/messages',
+    auth,
+    asyncHandler(async (req, res) => {
+      const { chatId } = req.params;
+
+      const chat = await prisma.chat.findFirst({
+        where: {
+          id: chatId,
+          OR: [
+            { isGlobal: true },
+            { participants: { some: { id: req.auth.userId } } }
+          ]
+        }
+      });
+
+      if (!chat) {
+        return res.status(404).json({ message: 'Chat not found' });
+      }
+
+      const messages = await prisma.message.findMany({
+        where: { chatId },
+        orderBy: { createdAt: 'asc' },
+        select: {
+          id: true,
+          text: true,
+          kind: true,
+          sourceText: true,
+          status: true,
+          metadata: true,
+          createdAt: true,
+          senderId: true,
+          sender: {
+            select: { id: true, name: true, avatar: true }
+          }
+        }
+      });
+
+      res.json({ messages });
+    })
+  );
+
+  router.post(
+    '/private',
+    auth,
+    asyncHandler(async (req, res) => {
+      const { participantId } = req.body ?? {};
+
+      if (!participantId || participantId === req.auth.userId) {
+        return res.status(400).json({ message: 'A valid second participant is required' });
+      }
+
+      const participant = await prisma.user.findUnique({ where: { id: participantId } });
+      if (!participant) {
+        return res.status(404).json({ message: 'Participant not found' });
+      }
+
+      const existingChats = await prisma.chat.findMany({
+        where: {
+          isGlobal: false,
+          isGroup: false,
+          participants: {
+            some: { id: req.auth.userId }
+          }
+        },
+        include: {
+          participants: {
+            select: { id: true }
+          }
+        }
+      });
+
+      const existing = existingChats.find((chat) => {
+        const ids = chat.participants.map((p) => p.id).sort();
+        return ids.length === 2 && ids[0] !== ids[1] && ids.includes(req.auth.userId) && ids.includes(participantId);
+      });
+
+      if (existing) {
+        return res.json({ chat: existing, existing: true });
+      }
+
+      const chat = await prisma.chat.create({
+        data: {
+          isGroup: false,
+          isGlobal: false,
+          title: null,
+          participants: {
+            connect: [{ id: req.auth.userId }, { id: participantId }]
+          }
+        },
+        include: {
+          participants: {
+            select: { id: true, name: true, avatar: true, isOnline: true }
+          }
+        }
+      });
+
+      res.status(201).json({ chat, existing: false });
+    })
+  );
+
+  return router;
+}
