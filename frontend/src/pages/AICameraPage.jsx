@@ -7,9 +7,5 @@ export default function AICameraPage() {
   const { isAuthenticated } = useAuthStore();
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
-  return (
-    <div className="px-4 py-6">
-      <AICamera />
-    </div>
-  );
+  return <AICamera />;
 }
