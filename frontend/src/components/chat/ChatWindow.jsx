@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { MoreVertical } from 'lucide-react';
 import { useLanguage } from '../../lib/LanguageContext';
 import MessageBubble from './MessageBubble';
@@ -11,14 +11,24 @@ function getChatLabel(chat, myId) {
   return other?.name || 'Private Chat';
 }
 
+function EmptyIcon() {
+  return (
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"
+         style={{opacity:.3}}>
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+  );
+}
+
 export default function ChatWindow({ activeChat, messages, loadingMsgs, messagesEndRef, myId, onSendText, onSendSign }) {
   const { t } = useLanguage();
 
   if (!activeChat) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center bg-gray-900 gap-3 text-gray-500">
-        <MessageSquareIcon />
-        <p className="text-sm">{t('noChats')}</p>
+      <div className="chat-window-empty">
+        <EmptyIcon />
+        <p style={{fontSize:'.875rem'}}>{t('noChats')}</p>
       </div>
     );
   }
@@ -26,61 +36,36 @@ export default function ChatWindow({ activeChat, messages, loadingMsgs, messages
   const label = getChatLabel(activeChat, myId);
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 bg-gray-900">
-      {/* Header */}
-      <div className="flex items-center justify-between px-5 py-3.5
-                      bg-gray-800 border-b border-gray-700">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-700 to-blue-500
-                          flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-            {label.charAt(0).toUpperCase()}
-          </div>
+    <div className="chat-window">
+      <div className="chat-window-header">
+        <div className="chat-window-header-info">
+          <div className="chat-avatar-sm">{label.charAt(0).toUpperCase()}</div>
           <div>
-            <p className="text-white font-semibold text-sm">{label}</p>
-            <p className="text-emerald-400 text-xs">
+            <p className="chat-window-name">{label}</p>
+            <p className="chat-window-sub">
               {activeChat.isGlobal ? t('global') : t('private')}
             </p>
           </div>
         </div>
-        <button className="btn-ghost p-2 rounded-xl">
+        <button className="btn-ghost" style={{padding:'.5rem',borderRadius:'12px'}}>
           <MoreVertical size={18} />
         </button>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-3">
+      <div className="chat-messages">
         {loadingMsgs ? (
-          <p className="text-center text-gray-500 text-sm m-auto">{t('loading')}</p>
+          <p style={{textAlign:'center',color:'#6b7280',fontSize:'.875rem',margin:'auto'}}>{t('loading')}</p>
         ) : messages.length === 0 ? (
-          <p className="text-center text-gray-500 text-sm m-auto">{t('noMessages')}</p>
+          <p style={{textAlign:'center',color:'#6b7280',fontSize:'.875rem',margin:'auto'}}>{t('noMessages')}</p>
         ) : (
           messages.map((msg, idx) => (
-            <MessageBubble
-              key={msg.id || idx}
-              msg={msg}
-              isMine={msg.senderId === myId}
-            />
+            <MessageBubble key={msg.id || idx} msg={msg} isMine={msg.senderId === myId} />
           ))
         )}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <ChatInput
-        onSendText={onSendText}
-        onSendSign={onSendSign}
-        disabled={!activeChat}
-      />
+      <ChatInput onSendText={onSendText} onSendSign={onSendSign} disabled={!activeChat} />
     </div>
-  );
-}
-
-function MessageSquareIcon() {
-  return (
-    <svg width="48" height="48" viewBox="0 0 24 24" fill="none"
-         stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"
-         opacity="0.3">
-      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-    </svg>
   );
 }
