@@ -1,5 +1,6 @@
 import React from 'react';
 import { LoaderCircle, Mic } from 'lucide-react';
+import { useLanguage } from '../lib/LanguageContext';
 
 export function VoiceActionButton({
   label,
@@ -14,17 +15,17 @@ export function VoiceActionButton({
   const isBusy = isListening || isProcessing;
 
   return (
-    <div className="voice-button-panel">
-      <div className="composer-voice-cluster" aria-label={`${label} controls`}>
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-2">
         <button
           type="button"
-          className={`voice-write-btn${isListening ? ' recording' : ''}`}
+          className={`voice-write-btn ${isListening ? 'recording' : ''}`}
           onClick={onStart}
           disabled={!isSupported || isBusy}
           title={!isSupported ? 'Voice input is not supported in this browser.' : title}
         >
-          <Mic size={15} aria-hidden="true" />
-          <span className="voice-btn-label">{label}</span>
+          <Mic size={14} aria-hidden="true" />
+          <span>{label}</span>
         </button>
 
         {isBusy && (
@@ -32,12 +33,12 @@ export function VoiceActionButton({
             {isListening ? (
               <>
                 <span className="recording-dot" aria-hidden="true" />
-                <span>Listening...</span>
+                <span className="text-xs text-gray-400">Listening...</span>
               </>
             ) : (
               <>
-                <LoaderCircle size={13} className="spinner" aria-hidden="true" />
-                <span>Processing...</span>
+                <LoaderCircle size={12} className="spinner text-gray-400" aria-hidden="true" />
+                <span className="text-xs text-gray-400">Processing...</span>
               </>
             )}
           </div>
@@ -49,11 +50,11 @@ export function VoiceActionButton({
           <span>{error}</span>
           <button
             type="button"
-            className="voice-error-dismiss"
+            className="text-red-400 hover:text-red-300 font-bold text-base leading-none"
             onClick={onClearError}
-            aria-label="Dismiss voice error"
+            aria-label="Dismiss error"
           >
-            {'\u00D7'}
+            <X size={14} />
           </button>
         </div>
       )}
