@@ -1,5 +1,5 @@
 import React from 'react';
-import { LoaderCircle, Mic } from 'lucide-react';
+import { LoaderCircle, Mic, X } from 'lucide-react';
 import { useLanguage } from '../lib/LanguageContext';
 
 export function VoiceActionButton({
@@ -15,11 +15,11 @@ export function VoiceActionButton({
   const isBusy = isListening || isProcessing;
 
   return (
-    <div className="flex flex-col gap-1">
-      <div className="flex items-center gap-2">
+    <div style={{ display:'flex', flexDirection:'column', gap:'0.25rem' }}>
+      <div style={{ display:'flex', alignItems:'center', gap:'0.5rem' }}>
         <button
           type="button"
-          className={`voice-write-btn ${isListening ? 'recording' : ''}`}
+          className={`voice-write-btn${isListening ? ' recording' : ''}`}
           onClick={onStart}
           disabled={!isSupported || isBusy}
           title={!isSupported ? 'Voice input is not supported in this browser.' : title}
@@ -33,12 +33,12 @@ export function VoiceActionButton({
             {isListening ? (
               <>
                 <span className="recording-dot" aria-hidden="true" />
-                <span className="text-xs text-gray-400">Listening...</span>
+                <span style={{ fontSize:'0.75rem', color:'#9ca3af' }}>Listening...</span>
               </>
             ) : (
               <>
-                <LoaderCircle size={12} className="spinner text-gray-400" aria-hidden="true" />
-                <span className="text-xs text-gray-400">Processing...</span>
+                <LoaderCircle size={12} style={{ color:'#9ca3af', animation:'spin 0.75s linear infinite' }} aria-hidden="true" />
+                <span style={{ fontSize:'0.75rem', color:'#9ca3af' }}>Processing...</span>
               </>
             )}
           </div>
@@ -50,7 +50,7 @@ export function VoiceActionButton({
           <span>{error}</span>
           <button
             type="button"
-            className="text-red-400 hover:text-red-300 font-bold text-base leading-none"
+            style={{ color:'#f87171', background:'none', border:'none', cursor:'pointer', fontWeight:'bold', fontSize:'1rem', lineHeight:1, display:'flex' }}
             onClick={onClearError}
             aria-label="Dismiss error"
           >
