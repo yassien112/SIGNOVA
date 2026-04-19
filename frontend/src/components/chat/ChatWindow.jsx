@@ -1,5 +1,5 @@
-import React from 'react';
-import { MoreVertical } from 'lucide-react';
+import React, { useRef, useCallback } from 'react';
+import { MoreVertical, Loader2 } from 'lucide-react';
 import { useLanguage } from '../../lib/LanguageContext';
 import MessageBubble from './MessageBubble';
 import ChatInput from './ChatInput';
@@ -11,13 +11,10 @@ function getChatLabel(chat, myId) {
   const other = chat.participants?.find((p) => p.id !== myId);
   return other?.name || 'Private Chat';
 }
-
 function getOnlineStatus(chat, myId) {
   if (chat.isGlobal) return null;
-  const other = chat.participants?.find((p) => p.id !== myId);
-  return other?.isOnline;
+  return chat.participants?.find((p) => p.id !== myId)?.isOnline;
 }
-
 function EmptyIcon() {
   return (
     <svg width="48" height="48" viewBox="0 0 24 24" fill="none"
@@ -29,11 +26,20 @@ function EmptyIcon() {
 }
 
 export default function ChatWindow({
-  activeChat, messages, loadingMsgs, messagesEndRef,
-  myId, onSendText, onSendSign, typingLabel,
-  onTyping, onStopTyping, onToggleReaction,
+  activeChat, messages, loadingMsgs, loadingMore, hasMore,
+  messagesEndRef, myId, onSendText, onSendSign,
+  typingLabel, onTyping, onStopTyping, onToggleReaction, onLoadMore,
 }) {
   const { t } = useLanguage();
+  const containerRef = useRef(null);
+
+  // Infinite scroll — trigger when user scrolls near the top
+  const handleScroll = useCallback(() => {
+    if (!containerRef.current || !hasMore || loadingMore) return;
+    if (containerRef.current.scrollTop < 80) {
+      onLoadMore?.();
+    }
+  }, [hasMore, loadingMore, onLoadMore]);
 
   if (!activeChat) {
     return (
@@ -50,6 +56,7 @@ export default function ChatWindow({
 
   return (
     <div className="chat-window">
+      {/* Header */}
       <div className="chat-window-header">
         <div className="chat-window-header-info">
           <div className="chat-avatar-sm" style={{ position: 'relative' }}>
@@ -72,11 +79,32 @@ export default function ChatWindow({
         </button>
       </div>
 
-      <div className="chat-messages">
+      {/* Messages */}
+      <div className="chat-messages" ref={containerRef} onScroll={handleScroll}>
+
+        {/* Load-more spinner at the very top */}
+        {loadingMore && (
+          <div className="chat-load-more-spinner">
+            <Loader2 size={16} className="spin" />
+            <span>Loading older messages…</span>
+          </div>
+        )}
+
+        {/* Load-more button fallback (shows if hasMore and not currently loading) */}
+        {hasMore && !loadingMore && (
+          <button className="chat-load-more-btn" onClick={onLoadMore}>
+            Load older messages
+          </button>
+        )}
+
         {loadingMsgs ? (
-          <p style={{ textAlign: 'center', color: '#6b7280', fontSize: '.875rem', margin: 'auto' }}>{t('loading')}</p>
+          <div className="chat-msgs-loading">
+            <Loader2 size={20} className="spin" />
+          </div>
         ) : messages.length === 0 ? (
-          <p style={{ textAlign: 'center', color: '#6b7280', fontSize: '.875rem', margin: 'auto' }}>{t('noMessages')}</p>
+          <p style={{ textAlign: 'center', color: '#6b7280', fontSize: '.875rem', margin: 'auto' }}>
+            {t('noMessages')}
+          </p>
         ) : (
           messages.map((msg, idx) => (
             <MessageBubble
@@ -93,11 +121,8 @@ export default function ChatWindow({
       {typing && <TypingIndicator label={typing} />}
 
       <ChatInput
-        onSendText={onSendText}
-        onSendSign={onSendSign}
-        disabled={!activeChat}
-        onTyping={onTyping}
-        onStopTyping={onStopTyping}
+        onSendText={onSendText} onSendSign={onSendSign}
+        disabled={!activeChat} onTyping={onTyping} onStopTyping={onStopTyping}
       />
     </div>
   );

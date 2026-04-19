@@ -12,10 +12,10 @@ export default function Chat() {
 
   const {
     chats, activeChat, setActiveChat,
-    messages, loadingChats, loadingMsgs,
+    messages, loadingChats, loadingMsgs, loadingMore, hasMore,
     messagesEndRef, sendText, sendSign, createPrivateChat,
     typingLabel, unreadCounts, emitTyping, emitStopTyping,
-    toggleReaction,
+    toggleReaction, loadMoreMessages,
   } = useChat();
 
   useEffect(() => {
@@ -36,12 +36,13 @@ export default function Chat() {
       />
       <ChatWindow
         activeChat={activeChat} messages={messages}
-        loadingMsgs={loadingMsgs} messagesEndRef={messagesEndRef}
-        myId={user?.id} onSendText={sendText} onSendSign={sendSign}
+        loadingMsgs={loadingMsgs} loadingMore={loadingMore} hasMore={hasMore}
+        messagesEndRef={messagesEndRef} myId={user?.id}
+        onSendText={sendText} onSendSign={sendSign}
         typingLabel={typingLabel}
-        onTyping={emitTyping}
-        onStopTyping={emitStopTyping}
+        onTyping={emitTyping} onStopTyping={emitStopTyping}
         onToggleReaction={toggleReaction}
+        onLoadMore={loadMoreMessages}
       />
     </div>
   );
