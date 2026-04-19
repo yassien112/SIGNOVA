@@ -1,41 +1,33 @@
 /**
- * SIGNOVA – frontend/src/lib/config.js
- *
- * Single source of truth for all backend URLs.
- *
- * Dev (local PC)   → leave VITE_BACKEND_URL unset; Vite proxy forwards /api & /socket.io to localhost:5000
- * Dev (mobile/LAN) → set VITE_BACKEND_URL=http://192.168.1.X:5000 in frontend/.env
- * Production       → set VITE_BACKEND_URL=https://your-backend.railway.app in Vercel env vars
+ * frontend/src/lib/config.js
+ * Central place for all environment-based URLs.
  */
 
-const rawBackendUrl = import.meta.env.VITE_BACKEND_URL?.trim().replace(/\/$/, '') ?? '';
+const RAW_API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-export const BACKEND_URL = rawBackendUrl;
+// Strip trailing slash
+export const BASE_URL = RAW_API.replace(/\/$/, '');
+export const API_BASE = `${BASE_URL}/api`;
 
+/**
+ * Build a full API endpoint URL.
+ * @param {string} path - e.g. '/auth/login'
+ */
 export function getApiUrl(path) {
-  const normalized = path.startsWith('/') ? path : `/${path}`;
-  return BACKEND_URL ? `${BACKEND_URL}${normalized}` : normalized;
+  const normalised = path.startsWith('/') ? path : `/${path}`;
+  return `${API_BASE}${normalised}`;
 }
 
-export const TEXT_TO_SIGN_API_URL = getApiUrl('/api/text-to-sign');
+/**
+ * Socket URL for the chat namespace.
+ */
+export function getChatSocketUrl() {
+  return BASE_URL;
+}
 
 /**
- * Socket.IO base URL (no namespace).
- * Empty string → connect to same origin → Vite proxy tunnels to backend.
+ * Generic socket URL (same server).
  */
-export const SOCKET_URL = BACKEND_URL || '';
-
-/**
- * Chat namespace URL.
- * socket.io-client: io('http://host/chat') OR io('http://host', { path: '/chat' })
- */
-export const CHAT_SOCKET_URL = BACKEND_URL
-  ? `${BACKEND_URL}/chat`
-  : '/chat';
-
-/**
- * Sign-language namespace URL.
- */
-export const SIGN_LANGUAGE_SOCKET_URL = BACKEND_URL
-  ? `${BACKEND_URL}/sign-language`
-  : '/sign-language';
+export function getSocketUrl() {
+  return BASE_URL;
+}
