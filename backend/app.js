@@ -6,9 +6,11 @@ import { createDashboardRouter } from './routes/dashboardRoutes.js';
 import { createProfileRouter } from './routes/profileRoutes.js';
 import { createSignLanguageRouter } from './routes/signLanguageRoutes.js';
 import { createSpeechToTextRouter } from './routes/speechToTextRoutes.js';
+import { createSpeechRouter } from './routes/speechRoutes.js';
 import { createTextToSignRouter } from './routes/textToSignRoutes.js';
 import { createUserRouter } from './routes/userRoutes.js';
 import { createAdminRouter } from './routes/adminRoutes.js';
+import { createNotificationRouter } from './routes/notificationRoutes.js';
 
 export function createApp({
   prisma,
@@ -25,24 +27,25 @@ export function createApp({
 
   app.get('/api/health', async (req, res) => {
     const speech = speechToTextService.getAvailabilityDetail();
-    const [users, chats, messages, signs, signPacks] = await Promise.all([
+    const [users, chats, messages, signs, signPacks, notifications] = await Promise.all([
       prisma.user.count(),
       prisma.chat.count(),
       prisma.message.count(),
       prisma.sign.count(),
       prisma.signPack.count(),
+      prisma.notification.count(),
     ]);
     res.json({
       status: 'ok',
       uptime: process.uptime(),
-      totals: { users, chats, messages, signs, signPacks },
+      totals: { users, chats, messages, signs, signPacks, notifications },
       realtimeSignLanguage: true,
       textToSignAvailable: true,
       speechToTextAvailable: speech.available,
       ...(speech.available ? {} : {
         speechToTextReason: speech.reason,
-        speechToTextHint: speech.hint
-      })
+        speechToTextHint: speech.hint,
+      }),
     });
   });
 
@@ -51,23 +54,25 @@ export function createApp({
   app.use('/api/dashboard',      createDashboardRouter({ prisma, jwtSecret }));
   app.use('/api/profile',        createProfileRouter({ prisma, jwtSecret }));
   app.use('/api/users',          createUserRouter({ prisma, jwtSecret }));
+  app.use('/api/notifications',  createNotificationRouter({ prisma, jwtSecret }));
   app.use('/api/sign-language',  createSignLanguageRouter({ prisma, jwtSecret, signLanguageService }));
+  app.use('/api/speech',         createSpeechRouter({ prisma, jwtSecret, speechToTextService }));
   app.use('/api/text-to-sign',   createTextToSignRouter(textToSignService));
   app.use('/api/speech-to-text', createSpeechToTextRouter(speechToTextService, {
-    maxFileSizeBytes: speechToTextConfig.maxFileSizeBytes
+    maxFileSizeBytes: speechToTextConfig.maxFileSizeBytes,
   }));
   app.use('/api/admin',          createAdminRouter({ prisma, jwtSecret }));
 
   app.use((error, req, res, next) => {
     console.error(error);
     if (error?.code === 'LIMIT_FILE_SIZE') {
-      return res.status(413).json({ message: 'Uploaded audio is too large. Keep recordings under 25 MB.' });
+      return res.status(413).json({ message: 'Uploaded file is too large.' });
     }
     const statusCode =
-      error.message === 'Sign language session not found' ? 404 :
-      error.statusCode || 500;
+      error.message === 'Sign language session not found' ? 404
+      : error.statusCode || 500;
     res.status(statusCode).json({
-      message: statusCode === 500 ? 'Unexpected server error' : error.message
+      message: statusCode === 500 ? 'Unexpected server error' : error.message,
     });
   });
 

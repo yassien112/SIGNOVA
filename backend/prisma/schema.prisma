@@ -25,6 +25,22 @@ model User {
   chats         Chat[]            @relation("ChatParticipants")
   notifications Notification[]
   reactions     MessageReaction[]
+  refreshTokens RefreshToken[]
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  revokedAt DateTime?
+  userAgent String?
+  ip        String?
+
+  @@index([userId])
+  @@index([token])
 }
 
 model Chat {
@@ -88,27 +104,27 @@ model SignPack {
 }
 
 model Sign {
-  id            String   @id @default(uuid())
-  word          String
+  id             String    @id @default(uuid())
+  word           String
   normalizedWord String
-  label         String
-  imageUrl      String
-  thumbUrl      String?
-  category      String
-  lang          String   @default("ar")
-  tags          String[]
-  aliases       String[]
-  source        String   @default("manual")
-  sampleCount   Int      @default(0)
-  isSticker     Boolean  @default(false)
-  isActive      Boolean  @default(true)
-  sortOrder     Int      @default(0)
-  metadata      Json?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  label          String
+  imageUrl       String
+  thumbUrl       String?
+  category       String
+  lang           String    @default("ar")
+  tags           String[]
+  aliases        String[]
+  source         String    @default("manual")
+  sampleCount    Int       @default(0)
+  isSticker      Boolean   @default(false)
+  isActive       Boolean   @default(true)
+  sortOrder      Int       @default(0)
+  metadata       Json?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
-  packId        String?
-  pack          SignPack? @relation(fields: [packId], references: [id], onDelete: SetNull)
+  packId         String?
+  pack           SignPack?  @relation(fields: [packId], references: [id], onDelete: SetNull)
 
   @@unique([lang, normalizedWord])
   @@index([lang, category])
@@ -119,9 +135,14 @@ model Sign {
 model Notification {
   id         String   @id @default(uuid())
   userId     String
-  user       User     @relation(fields: [userId], references: [id])
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   type       String
+  title      String?
   message    String
+  link       String?
   readStatus Boolean  @default(false)
   createdAt  DateTime @default(now())
+
+  @@index([userId, readStatus])
+  @@index([userId, createdAt])
 }
