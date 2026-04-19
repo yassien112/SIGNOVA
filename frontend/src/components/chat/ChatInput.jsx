@@ -1,8 +1,9 @@
 import React, { useRef, useState } from 'react';
-import { Send, Smile, Mic, Hand } from 'lucide-react';
+import { Send, Smile, Mic, Hand, Camera } from 'lucide-react';
 import { useLanguage } from '../../lib/LanguageContext';
 import { VoiceButton } from '../VoiceButton';
 import { VoiceToSignButton } from '../VoiceToSignButton';
+import InlineCameraPanel from './InlineCameraPanel';
 
 const MODES = { TEXT: 'text', SIGN: 'sign' };
 
@@ -11,6 +12,7 @@ export default function ChatInput({ onSendText, onSendSign, disabled }) {
   const inputRef = useRef(null);
   const [text, setText] = useState('');
   const [mode, setMode] = useState(MODES.TEXT);
+  const [cameraOpen, setCameraOpen] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -31,11 +33,28 @@ export default function ChatInput({ onSendText, onSendSign, disabled }) {
     requestAnimationFrame(() => inputRef.current?.focus());
   };
 
+  const handleAppendCameraText = (transcript) => {
+    if (!transcript?.trim()) return;
+    setText((prev) => prev.trim() ? `${prev.trimEnd()} ${transcript}` : transcript);
+    requestAnimationFrame(() => inputRef.current?.focus());
+  };
+
+  const handleSendCameraSign = (payload) => {
+    onSendSign?.(payload);
+    setCameraOpen(false);
+  };
+
   return (
     <div className="chat-input-wrap">
-      {/* Mode + Voice row */}
+      <InlineCameraPanel
+        open={cameraOpen}
+        onClose={() => setCameraOpen(false)}
+        onAppendText={handleAppendCameraText}
+        onSendSign={handleSendCameraSign}
+        disabled={disabled}
+      />
+
       <div className="chat-input-toolbar">
-        {/* Mode toggle */}
         <div className="chat-mode-toggle">
           <button
             type="button"
@@ -57,8 +76,18 @@ export default function ChatInput({ onSendText, onSendSign, disabled }) {
           </button>
         </div>
 
-        {/* Voice action button */}
         <div className="chat-voice-action">
+          <button
+            type="button"
+            className={`btn-secondary inline-camera-trigger${cameraOpen ? ' active' : ''}`}
+            onClick={() => setCameraOpen((v) => !v)}
+            disabled={disabled}
+            title="Open sign camera"
+          >
+            <Camera size={15} />
+            <span>Sign Camera</span>
+          </button>
+
           {mode === MODES.TEXT
             ? <VoiceButton language="ar-EG" onTranscript={handleVoiceTranscript} />
             : <VoiceToSignButton language="ar-EG" onSignReady={onSendSign} />
@@ -66,7 +95,6 @@ export default function ChatInput({ onSendText, onSendSign, disabled }) {
         </div>
       </div>
 
-      {/* Composer */}
       <form onSubmit={handleSubmit} className="chat-composer">
         <button
           type="button"
