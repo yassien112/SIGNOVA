@@ -2,13 +2,27 @@ import express from 'express';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { createAuthMiddleware } from '../utils/authMiddleware.js';
 
+function shapeReactionGroups(reactions = []) {
+  const map = new Map();
+  for (const reaction of reactions) {
+    const key = reaction.emoji;
+    if (!map.has(key)) {
+      map.set(key, { emoji: key, count: 0, users: [] });
+    }
+    const group = map.get(key);
+    group.count += 1;
+    group.users.push({
+      userId: reaction.userId,
+      name: reaction.user?.name || 'User',
+    });
+  }
+  return Array.from(map.values());
+}
+
 export function createChatRouter({ prisma, jwtSecret }) {
   const router = express.Router();
   const auth   = createAuthMiddleware(jwtSecret);
 
-  /* ──────────────────────────────────────
-     GET /api/chat  — list chats + unread counts
-  ────────────────────────────────────── */
   router.get('/', auth, asyncHandler(async (req, res) => {
     const myId = req.auth.userId;
 
@@ -27,37 +41,28 @@ export function createChatRouter({ prisma, jwtSecret }) {
           take: 1,
           orderBy: { createdAt: 'desc' },
           select: { id: true, text: true, kind: true, createdAt: true, senderId: true }
-        },
-        _count: false,  // we compute manually below
+        }
       }
     });
 
-    // Attach unread count per chat (messages NOT sent by me that are not 'seen')
     const chatIds = chats.map((c) => c.id);
-    const unreadRows = await prisma.message.groupBy({
-      by: ['chatId'],
-      where: {
-        chatId:   { in: chatIds },
-        senderId: { not: myId },
-        status:   { not: 'seen' },
-      },
-      _count: { id: true },
-    });
-    const unreadMap = Object.fromEntries(
-      unreadRows.map((r) => [r.chatId, r._count.id])
-    );
+    const unreadRows = chatIds.length
+      ? await prisma.message.groupBy({
+          by: ['chatId'],
+          where: {
+            chatId: { in: chatIds },
+            senderId: { not: myId },
+            status: { not: 'seen' },
+          },
+          _count: { id: true },
+        })
+      : [];
 
-    const result = chats.map((c) => ({
-      ...c,
-      unreadCount: unreadMap[c.id] ?? 0,
-    }));
-
+    const unreadMap = Object.fromEntries(unreadRows.map((r) => [r.chatId, r._count.id]));
+    const result = chats.map((c) => ({ ...c, unreadCount: unreadMap[c.id] ?? 0 }));
     res.json({ chats: result });
   }));
 
-  /* ──────────────────────────────────────
-     GET /api/chat/:chatId/messages
-  ────────────────────────────────────── */
   router.get('/:chatId/messages', auth, asyncHandler(async (req, res) => {
     const { chatId } = req.params;
     const myId = req.auth.userId;
@@ -76,23 +81,28 @@ export function createChatRouter({ prisma, jwtSecret }) {
       select: {
         id: true, text: true, kind: true, sourceText: true,
         status: true, metadata: true, createdAt: true, senderId: true,
-        sender: { select: { id: true, name: true, avatar: true } }
+        sender: { select: { id: true, name: true, avatar: true } },
+        reactions: {
+          select: {
+            id: true,
+            emoji: true,
+            userId: true,
+            user: { select: { id: true, name: true } }
+          }
+        }
       }
     });
 
-    // Flatten metadata into each message
     const shaped = messages.map((m) => ({
       ...m,
       senderName: m.sender?.name || 'User',
+      reactions: shapeReactionGroups(m.reactions),
       ...(m.metadata && typeof m.metadata === 'object' ? m.metadata : {}),
     }));
 
     res.json({ messages: shaped });
   }));
 
-  /* ──────────────────────────────────────
-     PATCH /api/chat/:chatId/seen  — mark all unread as seen (REST fallback)
-  ────────────────────────────────────── */
   router.patch('/:chatId/seen', auth, asyncHandler(async (req, res) => {
     const { chatId } = req.params;
     const myId = req.auth.userId;
@@ -101,7 +111,7 @@ export function createChatRouter({ prisma, jwtSecret }) {
       where: {
         chatId,
         senderId: { not: myId },
-        status:   { not: 'seen' },
+        status: { not: 'seen' },
       },
       data: { status: 'seen' },
     });
@@ -109,9 +119,6 @@ export function createChatRouter({ prisma, jwtSecret }) {
     res.json({ ok: true });
   }));
 
-  /* ──────────────────────────────────────
-     POST /api/chat/private
-  ────────────────────────────────────── */
   router.post('/private', auth, asyncHandler(async (req, res) => {
     const { participantId, participantEmail } = req.body ?? {};
     const myId = req.auth.userId;
@@ -125,13 +132,12 @@ export function createChatRouter({ prisma, jwtSecret }) {
       if (!found) return res.status(404).json({ message: 'No user found with that email address.' });
       targetId = found.id;
     }
-    if (!targetId)   return res.status(400).json({ message: 'participantId or participantEmail is required.' });
+    if (!targetId) return res.status(400).json({ message: 'participantId or participantEmail is required.' });
     if (targetId === myId) return res.status(400).json({ message: 'You cannot start a chat with yourself.' });
 
     const participant = await prisma.user.findUnique({ where: { id: targetId } });
     if (!participant) return res.status(404).json({ message: 'Participant not found.' });
 
-    // Find existing 1-on-1
     const existingChats = await prisma.chat.findMany({
       where: { isGlobal: false, isGroup: false, participants: { some: { id: myId } } },
       include: { participants: { select: { id: true } } }

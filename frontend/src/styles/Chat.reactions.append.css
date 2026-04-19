@@ -1,0 +1,96 @@
+/* appended reaction styles */
+.msg-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .4rem;
+  margin-top: 4px;
+}
+.msg-reaction-tools {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.msg-react-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.18);
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: .75;
+  transition: all .15s ease;
+}
+.msg-react-btn:hover {
+  opacity: 1;
+  transform: translateY(-1px);
+}
+.msg-reaction-picker {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: .25rem;
+  padding: .35rem;
+  border-radius: 9999px;
+  background: #0d1424;
+  border: 1px solid #1e2d45;
+  box-shadow: 0 10px 24px rgba(0,0,0,.35);
+  z-index: 10;
+}
+html[dir='rtl'] .msg-reaction-picker {
+  right: auto;
+  left: 0;
+}
+.msg-reaction-option {
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  border: none;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: transform .12s ease, background .12s ease;
+}
+.msg-reaction-option:hover {
+  background: rgba(255,255,255,.06);
+  transform: scale(1.08);
+}
+.msg-reaction-bar {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  flex-wrap: wrap;
+  margin-top: .3rem;
+}
+.msg-reaction-bar.mine {
+  align-self: flex-end;
+}
+.msg-reaction-bar.theirs {
+  align-self: flex-start;
+}
+.msg-reaction-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
+  padding: .18rem .45rem;
+  border-radius: 9999px;
+  border: 1px solid #1e2d45;
+  background: #111c2e;
+  color: #e2e8f0;
+  font-size: .72rem;
+  cursor: pointer;
+  transition: all .15s ease;
+}
+.msg-reaction-chip:hover {
+  transform: translateY(-1px);
+  border-color: #31538f;
+}

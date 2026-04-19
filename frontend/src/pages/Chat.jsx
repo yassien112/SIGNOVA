@@ -15,6 +15,7 @@ export default function Chat() {
     messages, loadingChats, loadingMsgs,
     messagesEndRef, sendText, sendSign, createPrivateChat,
     typingLabel, unreadCounts, emitTyping, emitStopTyping,
+    toggleReaction,
   } = useChat();
 
   useEffect(() => {
@@ -40,6 +41,7 @@ export default function Chat() {
         typingLabel={typingLabel}
         onTyping={emitTyping}
         onStopTyping={emitStopTyping}
+        onToggleReaction={toggleReaction}
       />
     </div>
   );

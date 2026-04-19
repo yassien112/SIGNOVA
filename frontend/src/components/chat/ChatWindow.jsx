@@ -31,7 +31,7 @@ function EmptyIcon() {
 export default function ChatWindow({
   activeChat, messages, loadingMsgs, messagesEndRef,
   myId, onSendText, onSendSign, typingLabel,
-  onTyping, onStopTyping,
+  onTyping, onStopTyping, onToggleReaction,
 }) {
   const { t } = useLanguage();
 
@@ -54,9 +54,7 @@ export default function ChatWindow({
         <div className="chat-window-header-info">
           <div className="chat-avatar-sm" style={{ position: 'relative' }}>
             {label.charAt(0).toUpperCase()}
-            {isOnline != null && (
-              <span className={`chat-online-dot ${isOnline ? 'online' : 'offline'}`} />
-            )}
+            {isOnline != null && <span className={`chat-online-dot ${isOnline ? 'online' : 'offline'}`} />}
           </div>
           <div>
             <p className="chat-window-name">{label}</p>
@@ -81,13 +79,17 @@ export default function ChatWindow({
           <p style={{ textAlign: 'center', color: '#6b7280', fontSize: '.875rem', margin: 'auto' }}>{t('noMessages')}</p>
         ) : (
           messages.map((msg, idx) => (
-            <MessageBubble key={msg.id || idx} msg={msg} isMine={msg.senderId === myId} />
+            <MessageBubble
+              key={msg.id || idx}
+              msg={msg}
+              isMine={msg.senderId === myId}
+              onToggleReaction={onToggleReaction}
+            />
           ))
         )}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Typing bubble at the bottom of messages */}
       {typing && <TypingIndicator label={typing} />}
 
       <ChatInput

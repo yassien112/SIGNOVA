@@ -4,30 +4,28 @@ import { CHAT_SOCKET_URL } from '../lib/config';
 import { api } from '../lib/api';
 import { useAuthStore } from '../store/authStore';
 
-const TYPING_EMIT_MS  = 300;   // debounce before emitting typing event
-const TYPING_CLEAR_MS = 3000;  // clear typing indicator if no update
+const TYPING_CLEAR_MS = 3000;
 
 export function useChat() {
   const { user, token } = useAuthStore();
 
-  const [chats,           setChats]           = useState([]);
-  const [activeChat,      setActiveChat]       = useState(null);
-  const [messages,        setMessages]         = useState([]);
-  const [loadingChats,    setLoadingChats]     = useState(true);
-  const [loadingMsgs,     setLoadingMsgs]      = useState(false);
-  const [socketConnected, setSocketConnected]  = useState(false);
-  const [typingUsers,     setTypingUsers]      = useState({});  // { chatId: { userId: name } }
-  const [unreadCounts,    setUnreadCounts]     = useState({});  // { chatId: number }
+  const [chats,           setChats]          = useState([]);
+  const [activeChat,      setActiveChat]     = useState(null);
+  const [messages,        setMessages]       = useState([]);
+  const [loadingChats,    setLoadingChats]   = useState(true);
+  const [loadingMsgs,     setLoadingMsgs]    = useState(false);
+  const [socketConnected, setSocketConnected]= useState(false);
+  const [typingUsers,     setTypingUsers]    = useState({});
+  const [unreadCounts,    setUnreadCounts]   = useState({});
 
-  const socketRef     = useRef(null);
-  const activeChatRef = useRef(null);
+  const socketRef      = useRef(null);
+  const activeChatRef  = useRef(null);
   const messagesEndRef = useRef(null);
-  const typingTimer   = useRef(null);   // debounce for outgoing typing
-  const clearTimers   = useRef({});     // per-user clear timers
+  const typingTimer    = useRef(null);
+  const clearTimers    = useRef({});
 
   useEffect(() => { activeChatRef.current = activeChat; }, [activeChat]);
 
-  /* ─── load chats ─── */
   const loadChats = useCallback(() => {
     setLoadingChats(true);
     api.get('/api/chat')
@@ -35,7 +33,6 @@ export function useChat() {
         const list = data.chats ?? [];
         setChats(list);
         setActiveChat((prev) => prev ?? list[0] ?? null);
-        // seed unread counts from API response if available
         const counts = {};
         list.forEach((c) => { if (c.unreadCount) counts[c.id] = c.unreadCount; });
         setUnreadCounts(counts);
@@ -46,20 +43,18 @@ export function useChat() {
 
   useEffect(() => { if (user) loadChats(); }, [user]);
 
-  /* ─── load messages on chat change ─── */
   useEffect(() => {
     if (!activeChat) return;
     setLoadingMsgs(true);
     setMessages([]);
-    // Clear unread when opening a chat
     setUnreadCounts((prev) => ({ ...prev, [activeChat.id]: 0 }));
     api.get(`/api/chat/${activeChat.id}/messages`)
       .then((d) => setMessages(d.messages ?? []))
       .catch(() => {})
       .finally(() => setLoadingMsgs(false));
+    api.patch(`/api/chat/${activeChat.id}/seen`, {}).catch(() => {});
   }, [activeChat?.id]);
 
-  /* ─── socket ─── */
   useEffect(() => {
     if (!user || !token) return;
 
@@ -72,30 +67,20 @@ export function useChat() {
     socket.on('connect', () => {
       setSocketConnected(true);
       socket.emit('register', user.id);
-      if (activeChatRef.current?.id)
-        socket.emit('join_chat', activeChatRef.current.id);
+      if (activeChatRef.current?.id) socket.emit('join_chat', activeChatRef.current.id);
     });
 
     socket.on('disconnect', () => setSocketConnected(false));
 
-    /* incoming message */
     socket.on('receive_message', (msg) => {
       const isCurrent = msg.chatId === activeChatRef.current?.id;
 
       if (isCurrent) {
-        setMessages((prev) =>
-          prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]
-        );
+        setMessages((prev) => prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]);
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-        // Emit seen for the new message
         socket.emit('message_seen', { messageId: msg.id, chatId: msg.chatId });
       } else {
-        // Increment unread badge for other chats
-        setUnreadCounts((prev) => ({
-          ...prev,
-          [msg.chatId]: (prev[msg.chatId] ?? 0) + 1,
-        }));
-        // Refresh chat list to bump it to the top
+        setUnreadCounts((prev) => ({ ...prev, [msg.chatId]: (prev[msg.chatId] ?? 0) + 1 }));
         setChats((prev) => {
           const idx = prev.findIndex((c) => c.id === msg.chatId);
           if (idx < 0) return prev;
@@ -105,21 +90,17 @@ export function useChat() {
       }
     });
 
-    /* message status updates */
     socket.on('message_status', ({ messageId, status }) => {
-      setMessages((prev) =>
-        prev.map((m) => m.id === messageId ? { ...m, status } : m)
-      );
+      setMessages((prev) => prev.map((m) => m.id === messageId ? { ...m, status } : m));
     });
 
-    /* typing events */
+    socket.on('message_reactions', ({ messageId, reactions }) => {
+      setMessages((prev) => prev.map((m) => m.id === messageId ? { ...m, reactions } : m));
+    });
+
     socket.on('user_typing', ({ chatId, userId, userName }) => {
       if (userId === user.id) return;
-      setTypingUsers((prev) => ({
-        ...prev,
-        [chatId]: { ...(prev[chatId] ?? {}), [userId]: userName },
-      }));
-      // auto-clear this user's typing indicator after TYPING_CLEAR_MS
+      setTypingUsers((prev) => ({ ...prev, [chatId]: { ...(prev[chatId] ?? {}), [userId]: userName } }));
       clearTimeout(clearTimers.current[userId]);
       clearTimers.current[userId] = setTimeout(() => {
         setTypingUsers((prev) => {
@@ -139,16 +120,11 @@ export function useChat() {
       });
     });
 
-    /* online status */
     socket.on('user_status', ({ userId, isOnline }) => {
-      setChats((prev) =>
-        prev.map((c) => ({
-          ...c,
-          participants: c.participants?.map((p) =>
-            p.id === userId ? { ...p, isOnline } : p
-          ),
-        }))
-      );
+      setChats((prev) => prev.map((c) => ({
+        ...c,
+        participants: c.participants?.map((p) => p.id === userId ? { ...p, isOnline } : p),
+      })));
     });
 
     return () => {
@@ -157,18 +133,14 @@ export function useChat() {
     };
   }, [user, token]);
 
-  /* join room on chat change */
   useEffect(() => {
-    if (activeChat && socketRef.current?.connected)
-      socketRef.current.emit('join_chat', activeChat.id);
+    if (activeChat && socketRef.current?.connected) socketRef.current.emit('join_chat', activeChat.id);
   }, [activeChat?.id]);
 
-  /* scroll on new messages */
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  /* ─── outgoing typing helpers ─── */
   const emitTyping = useCallback(() => {
     if (!socketRef.current?.connected || !activeChatRef.current) return;
     clearTimeout(typingTimer.current);
@@ -194,7 +166,15 @@ export function useChat() {
     });
   }, [user]);
 
-  /* ─── message builders ─── */
+  const toggleReaction = useCallback((messageId, emoji) => {
+    if (!socketRef.current?.connected || !activeChatRef.current || !messageId || !emoji) return;
+    socketRef.current.emit('toggle_reaction', {
+      chatId: activeChatRef.current.id,
+      messageId,
+      emoji,
+    });
+  }, []);
+
   const buildBase = () => ({
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     chatId: activeChat?.id,
@@ -225,8 +205,8 @@ export function useChat() {
       kind: 'sign',
       text: payload.text?.trim() || sourceText,
       sourceText,
-      signs:        Array.isArray(payload.signs)        ? payload.signs        : [],
-      segments:     Array.isArray(payload.segments)     ? payload.segments     : [],
+      signs: Array.isArray(payload.signs) ? payload.signs : [],
+      segments: Array.isArray(payload.segments) ? payload.segments : [],
       matchedWords: Array.isArray(payload.matchedWords) ? payload.matchedWords : [],
       missingWords: Array.isArray(payload.missingWords) ? payload.missingWords : [],
     });
@@ -240,7 +220,6 @@ export function useChat() {
     return chat;
   };
 
-  /* typing label for current chat */
   const typingLabel = useCallback((chatId) => {
     const users = Object.values(typingUsers[chatId] ?? {});
     if (!users.length) return '';
@@ -262,5 +241,6 @@ export function useChat() {
     unreadCounts,
     emitTyping,
     emitStopTyping,
+    toggleReaction,
   };
 }

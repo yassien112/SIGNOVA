@@ -9,21 +9,22 @@ datasource db {
 }
 
 model User {
-  id            String         @id @default(uuid())
+  id            String            @id @default(uuid())
   name          String
-  email         String         @unique
+  email         String            @unique
   password      String
-  role          String         @default("User")
-  isOnline      Boolean        @default(false)
+  role          String            @default("User")
+  isOnline      Boolean           @default(false)
   avatar        String?
   bio           String?
-  preferredLang String         @default("en")
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  preferredLang String            @default("en")
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
 
   messages      Message[]
-  chats         Chat[]         @relation("ChatParticipants")
+  chats         Chat[]            @relation("ChatParticipants")
   notifications Notification[]
+  reactions     MessageReaction[]
 }
 
 model Chat {
@@ -38,17 +39,32 @@ model Chat {
 }
 
 model Message {
-  id          String   @id @default(uuid())
+  id          String            @id @default(uuid())
   text        String
-  kind        String   @default("text")
+  kind        String            @default("text")
   sourceText  String?
   senderId    String
-  sender      User     @relation(fields: [senderId], references: [id])
+  sender      User              @relation(fields: [senderId], references: [id])
   chatId      String
-  chat        Chat     @relation(fields: [chatId], references: [id])
-  status      String   @default("sent")
+  chat        Chat              @relation(fields: [chatId], references: [id])
+  status      String            @default("sent")
   metadata    Json?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime          @default(now())
+  reactions   MessageReaction[]
+}
+
+model MessageReaction {
+  id        String   @id @default(uuid())
+  emoji     String
+  messageId String
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([messageId, userId, emoji])
+  @@index([messageId])
+  @@index([userId])
 }
 
 model Notification {
