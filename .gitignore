@@ -1,3 +1,6 @@
 node_modules/
 .DS_Store
 *.log
+backend/prisma/dev.db
+backend/prisma/dev.db-journal
+backend/prisma/*.db

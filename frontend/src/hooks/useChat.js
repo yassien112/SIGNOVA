@@ -1,22 +1,27 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { io } from 'socket.io-client';
-import { SOCKET_URL } from '../lib/config';
+import { CHAT_SOCKET_URL } from '../lib/config';
 import { api } from '../lib/api';
 import { useAuthStore } from '../store/authStore';
 
 export function useChat() {
-  const { user } = useAuthStore();
+  const { user, token } = useAuthStore();
 
-  const [chats, setChats]           = useState([]);
-  const [activeChat, setActiveChat] = useState(null);
-  const [messages, setMessages]     = useState([]);
+  const [chats, setChats]               = useState([]);
+  const [activeChat, setActiveChat]     = useState(null);
+  const [messages, setMessages]         = useState([]);
   const [loadingChats, setLoadingChats] = useState(true);
   const [loadingMsgs, setLoadingMsgs]   = useState(false);
+  const [socketConnected, setSocketConnected] = useState(false);
 
   const socketRef      = useRef(null);
+  const activeChatRef  = useRef(null);
   const messagesEndRef = useRef(null);
 
-  /* ---------- load chats ---------- */
+  // Keep ref in sync so socket handlers always see latest activeChat
+  useEffect(() => { activeChatRef.current = activeChat; }, [activeChat]);
+
+  /* ── load chats ── */
   const loadChats = useCallback(() => {
     setLoadingChats(true);
     api.get('/api/chat')
@@ -31,7 +36,7 @@ export function useChat() {
 
   useEffect(() => { if (user) loadChats(); }, [user]);
 
-  /* ---------- load messages on chat change ---------- */
+  /* ── load messages on chat change ── */
   useEffect(() => {
     if (!activeChat) return;
     setLoadingMsgs(true);
@@ -42,33 +47,65 @@ export function useChat() {
       .finally(() => setLoadingMsgs(false));
   }, [activeChat?.id]);
 
-  /* ---------- socket ---------- */
+  /* ── socket ── */
   useEffect(() => {
-    if (!user) return;
-    const socket = io(SOCKET_URL, { transports: ['websocket', 'polling'] });
+    if (!user || !token) return;
+
+    const socket = io(CHAT_SOCKET_URL, {
+      transports: ['websocket', 'polling'],
+      // Send JWT so backend can auth the socket
+      auth: { token },
+    });
     socketRef.current = socket;
 
-    socket.on('connect', () => socket.emit('register', user.id));
+    socket.on('connect', () => {
+      setSocketConnected(true);
+      // Register userId (graceful fallback if middleware didn't set it)
+      socket.emit('register', user.id);
+      // Re-join active chat room on reconnect
+      if (activeChatRef.current?.id) {
+        socket.emit('join_chat', activeChatRef.current.id);
+      }
+    });
+
+    socket.on('disconnect', () => setSocketConnected(false));
+
     socket.on('receive_message', (msg) => {
-      setMessages((prev) => prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]);
+      // Only show message if it belongs to the currently open chat
+      if (msg.chatId !== activeChatRef.current?.id) return;
+      setMessages((prev) =>
+        prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]
+      );
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     });
-    return () => socket.disconnect();
-  }, [user]);
 
-  /* ---------- join room on chat change ---------- */
+    socket.on('user_status', ({ userId, isOnline }) => {
+      setChats((prev) =>
+        prev.map((c) => ({
+          ...c,
+          participants: c.participants?.map((p) =>
+            p.id === userId ? { ...p, isOnline } : p
+          )
+        }))
+      );
+    });
+
+    return () => socket.disconnect();
+  }, [user, token]);
+
+  /* ── join room on chat change ── */
   useEffect(() => {
     if (activeChat && socketRef.current?.connected) {
       socketRef.current.emit('join_chat', activeChat.id);
     }
   }, [activeChat?.id]);
 
-  /* ---------- scroll to bottom ---------- */
+  /* ── scroll to bottom ── */
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  /* ---------- send helpers ---------- */
+  /* ── helpers ── */
   const buildBase = () => ({
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     chatId: activeChat?.id,
@@ -121,6 +158,6 @@ export function useChat() {
     messagesEndRef,
     sendText, sendSign,
     createPrivateChat,
-    socketConnected: socketRef.current?.connected ?? false,
+    socketConnected,
   };
 }

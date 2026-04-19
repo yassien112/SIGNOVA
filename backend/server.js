@@ -38,7 +38,10 @@ const io = new Server(server, {
   maxHttpBufferSize: 100 * 1024
 });
 
-registerChatHandlers(io, prisma);
+// /chat namespace — private & group messaging
+registerChatHandlers(io, prisma, env.jwtSecret);
+
+// /sign-language namespace — AI gesture recognition
 registerSignLanguageHandlers(io, signLanguageService);
 
 await ensureGlobalChat(prisma);
@@ -59,21 +62,17 @@ function listLanIPv4Addresses() {
   for (const name of Object.keys(interfaces)) {
     for (const net of interfaces[name] || []) {
       const isIPv4 = net.family === 'IPv4' || net.family === 4;
-      if (isIPv4 && !net.internal) {
-        results.push(net.address);
-      }
+      if (isIPv4 && !net.internal) results.push(net.address);
     }
   }
   return [...new Set(results)];
 }
 
-const listenHost = '0.0.0.0';
-
-server.listen(env.port, listenHost, () => {
+server.listen(env.port, '0.0.0.0', () => {
   console.log(`Backend server listening on 0.0.0.0:${env.port} (LAN + localhost)`);
   console.log(`On this PC: http://localhost:${env.port}`);
   const lan = listLanIPv4Addresses();
   if (lan.length > 0) {
-    console.log(`On your phone (same Wi‑Fi): ${lan.map((ip) => `http://${ip}:${env.port}`).join('  |  ')}`);
+    console.log(`On your phone (same Wi-Fi): ${lan.map((ip) => `http://${ip}:${env.port}`).join('  |  ')}`);
   }
 });
