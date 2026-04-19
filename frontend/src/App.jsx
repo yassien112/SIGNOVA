@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { LanguageProvider }  from './lib/LanguageContext';
 import { useAuthStore }      from './store/authStore';
 import { useNotifications }  from './hooks/useNotifications';
@@ -14,15 +14,22 @@ import AICameraPage  from './pages/AICameraPage';
 import './styles/App.css';
 import './styles/components.css';
 
+function AdminRoute({ children }) {
+  const { isAuthenticated, user } = useAuthStore();
+
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (user?.role !== 'Admin') return <Navigate to="/" replace />;
+
+  return children;
+}
+
 function AppInner() {
   const { isAuthenticated, fetchMe } = useAuthStore();
 
-  // Re-hydrate user on refresh
   useEffect(() => {
     if (isAuthenticated) fetchMe();
   }, []);
 
-  // Connect notification socket
   useNotifications(isAuthenticated);
 
   return (
@@ -33,7 +40,7 @@ function AppInner() {
           <Route path="/"          element={<Home />} />
           <Route path="/login"     element={<Login />} />
           <Route path="/register"  element={<Register />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard" element={<AdminRoute><Dashboard /></AdminRoute>} />
           <Route path="/chat"      element={<Chat />} />
           <Route path="/profile"   element={<Profile />} />
           <Route path="/ai-camera" element={<AICameraPage />} />
