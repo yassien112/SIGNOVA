@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Send, Paperclip, Smile } from 'lucide-react';
+import { Send, Smile, Mic, Hand } from 'lucide-react';
 import { useLanguage } from '../../lib/LanguageContext';
 import { VoiceButton } from '../VoiceButton';
 import { VoiceToSignButton } from '../VoiceToSignButton';
@@ -9,14 +9,21 @@ const MODES = { TEXT: 'text', SIGN: 'sign' };
 export default function ChatInput({ onSendText, onSendSign, disabled }) {
   const { t } = useLanguage();
   const inputRef = useRef(null);
-  const [text,      setText]      = useState('');
-  const [voiceLang, setVoiceLang] = useState('ar-EG');
-  const [mode,      setMode]      = useState(MODES.TEXT);
+  const [text, setText] = useState('');
+  const [mode, setMode] = useState(MODES.TEXT);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!text.trim() || disabled) return;
-    onSendText(text); setText('');
+    onSendText(text.trim());
+    setText('');
+  };
+
+  const handleKey = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
+    }
   };
 
   const handleVoiceTranscript = (transcript) => {
@@ -26,44 +33,69 @@ export default function ChatInput({ onSendText, onSendSign, disabled }) {
 
   return (
     <div className="chat-input-wrap">
+      {/* Mode + Voice row */}
       <div className="chat-input-toolbar">
-        <div className="chat-input-toolbar-left">
-          <label className="chat-lang-label">
-            <span>{t('language')}</span>
-            <select value={voiceLang} onChange={(e) => setVoiceLang(e.target.value)} className="chat-lang-select">
-              <option value="ar-EG">{t('arabic')} (EG)</option>
-              <option value="en-US">{t('english')} (US)</option>
-            </select>
-          </label>
-          <div className="chat-mode-toggle">
-            {Object.values(MODES).map((m) => (
-              <button key={m} type="button" onClick={() => setMode(m)}
-                className={`chat-mode-btn${mode === m ? ' active' : ''}`}>
-                {m === MODES.TEXT ? t('voiceToText') : t('voiceToSign')}
-              </button>
-            ))}
-          </div>
+        {/* Mode toggle */}
+        <div className="chat-mode-toggle">
+          <button
+            type="button"
+            onClick={() => setMode(MODES.TEXT)}
+            className={`chat-mode-btn${mode === MODES.TEXT ? ' active' : ''}`}
+            title="Voice to Text"
+          >
+            <Mic size={13} />
+            {t('voiceToText')}
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode(MODES.SIGN)}
+            className={`chat-mode-btn${mode === MODES.SIGN ? ' active' : ''}`}
+            title="Voice to Sign"
+          >
+            <Hand size={13} />
+            {t('voiceToSign')}
+          </button>
         </div>
-        {mode === MODES.TEXT
-          ? <VoiceButton language={voiceLang} onTranscript={handleVoiceTranscript} />
-          : <VoiceToSignButton language={voiceLang} onSignReady={onSendSign} />
-        }
+
+        {/* Voice action button */}
+        <div className="chat-voice-action">
+          {mode === MODES.TEXT
+            ? <VoiceButton language="ar-EG" onTranscript={handleVoiceTranscript} />
+            : <VoiceToSignButton language="ar-EG" onSignReady={onSendSign} />
+          }
+        </div>
       </div>
 
+      {/* Composer */}
       <form onSubmit={handleSubmit} className="chat-composer">
-        <button type="button" className="btn-ghost" style={{padding:'.5rem',borderRadius:'12px',flexShrink:0}} disabled={disabled}>
-          <Paperclip size={20} />
+        <button
+          type="button"
+          className="btn-ghost chat-emoji-btn"
+          disabled={disabled}
+          title="Emoji (coming soon)"
+        >
+          <Smile size={19} />
         </button>
+
         <div className="chat-input-box">
-          <button type="button" style={{color:'#6b7280',background:'none',border:'none',cursor:'pointer',flexShrink:0,display:'flex'}}>
-            <Smile size={18} />
-          </button>
-          <input ref={inputRef} type="text" value={text}
+          <input
+            ref={inputRef}
+            type="text"
+            value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder={disabled ? '' : t('typeMessage')}
-            disabled={disabled} autoComplete="off" />
+            onKeyDown={handleKey}
+            placeholder={disabled ? 'Select a chat to start messaging' : t('typeMessage')}
+            disabled={disabled}
+            autoComplete="off"
+          />
         </div>
-        <button type="submit" disabled={!text.trim() || disabled} className="chat-send-btn">
+
+        <button
+          type="submit"
+          disabled={!text.trim() || disabled}
+          className="chat-send-btn"
+          title="Send"
+        >
           <Send size={16} />
           <span>{t('send')}</span>
         </button>
